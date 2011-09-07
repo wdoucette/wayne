@@ -1,0 +1,175 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include "test.h"
+
+//Definitions
+int getCmd();
+void stdin2stdout();
+void initStruct();
+void printTests(void);
+void mallocTest(char*, char*);
+
+
+#define PRINT_TOKEN(token) printf(#token " = %s\n", token);
+
+
+typedef struct {
+
+	char* name;
+	int number;
+
+} DATA;
+
+//Globals
+DATA in[2];
+
+
+void mallocTest(char *opt, char *len) {
+
+char *str = "test";
+int i;
+printf("opt is %s\n", opt);
+if(*opt =='y') {
+
+	printf("Resizing to %i with malloc\n", atoi(len));
+	str = malloc(atoi(len) * sizeof (*str) );
+
+} else 
+	printf("Not Resizing with malloc\n");
+	
+for(i=0; i< atoi(len); i++){
+
+	printf("Value is: %s", str);
+	*str=(char)i;	
+	str++;
+	printf("Setting: %i to: %c\n", i,i);
+}
+
+
+}
+
+
+int main(int argc, char** argv)
+{
+	int i;
+ if(__STDC_HOSTED__)
+	printf("\n\n***Hosted***\n");
+	else printf("Stand alone");
+char *token = "mytoken";
+PRINT_TOKEN(token);
+
+	// Process command line arguments.	
+	for(i=1 ; i < argc ; i++) {
+	
+		printf("Arg #%i: %s\n", i, argv[i]);
+	} 
+
+	initStruct();
+	printf("Struct name is: %s\n", in[0].name);
+	getchar();
+	//doStuff("test stuff");
+	//getCmd();
+	//stdin2stdout();
+	printTests();	
+/*	char* c = "puts test\n";
+	
+	puts(c);	
+	putc('c', stdout);
+*/
+	mallocTest(argv[1], argv[2]);
+	return 0;
+
+}
+
+void printTests() {
+
+	printf("put char to stream: int putc(int ch, FILE *stream\n");
+	putc('c',stdout); 
+
+
+
+}
+
+void doStuff(char* str){
+
+	int i=0;
+
+	FILE *io;
+	io = fopen("/tmp/testfile", "w");
+	
+	while(str[i] != 0 ) {
+		
+		printf("Writing char %c value is %d\n", str[i], str[i]);	
+		putc(str[i], io);
+		i++;
+	}
+
+	// Write an end of line char.
+	putc(10, io);
+	fclose(io);
+
+}
+
+
+int getCmd() {
+
+	int cmd = EOF;
+
+	printf("#");
+	
+	cmd=getchar();
+	printf("%c", cmd);
+
+	putc(cmd, stderr);	
+
+	return cmd;
+
+}
+
+void initStruct() {
+
+	in[0].name =  "Handsom";
+	in[0].number = 1; 	 
+	
+
+}
+
+
+void stdin2stdout() {
+
+
+
+	int ch = EOF;
+	char str[1024];
+	
+	// ptr to char array.
+	char *ptr;
+	ptr =&str[0];
+
+	int count =0;
+
+//while ((c=getc(stdin)) != EOF)
+ // putc(c, stdout);
+
+	do {	
+		ch = getc(stdin);
+		*ptr=ch;
+		ptr++;
+		count++;
+
+	} while (ch != EOF);
+
+	// Reset ptr to start.
+	ptr =&str[0];
+	
+	do { 
+		putc(*ptr, stdout);
+		ptr++;	
+	
+	} while (*ptr != EOF);
+
+ 
+
+}
+
+
