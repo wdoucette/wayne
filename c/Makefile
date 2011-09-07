@@ -1,4 +1,4 @@
-CFLAGS+= -Wall -g
+CFLAGS+= -Wall -g -lm
 
 all: ex1 ex2
 

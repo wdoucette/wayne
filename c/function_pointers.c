@@ -23,6 +23,8 @@ double fptr(double, double, double (*)(double,double) );
 
 int main(int argc, char * argv[])
 {
+	// TODO Process argumemt, define usage.
+
 	double x = atoi(argv[1]);
 	double y = atoi(argv[3]);	
  	double d;
@@ -31,11 +33,11 @@ int main(int argc, char * argv[])
 	printf("Processing %d %s %d\n" , (int)x ,argv[2], (int)y);
 	
 	// Function pointer example 1.
-	d = fptr(1.0,2.0, &doMod );
+	//d = fptr(1.0,2.0, &doMod );
 	
 	// Function pointer example 2.
 	ptf=GetPtr(argv[2][0]);
-	ptf(x , y);
+	d=ptf(x , y);
 
 	_dtoa(str, d);	
 	printf("Solution is: %s\n", str );
@@ -47,7 +49,9 @@ int main(int argc, char * argv[])
 void  _dtoa(char *str, double n){
 
 	// Double to string.
-	sprintf(str , "%.3f", (float)n);	
+	sprintf(str , "%.2f", (double)n);	
+
+
 }
 
 double fptr(double x, double y, double(*dellegate)(double, double)){
