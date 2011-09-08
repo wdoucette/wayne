@@ -1,0 +1,16 @@
+#### File automatically generate by GitAutoIgnore ####
+#<AutoIgnore>
+var
+silly_idea
+pointers
+test
+pointer_so_return_by_value
+my
+realloc
+pointers_callby_reference
+pointers_returnby_value
+pointers_returnby_reference
+pointers_callby_value
+function_pointers
+showsyserr
+#<AutoIgnore/>

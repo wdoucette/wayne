@@ -88,7 +88,7 @@ e: filename tab completion
 set: invlist -Display control characters
 
 
-
+:%s/Find/Replace/g - global search and replace (g=multiline??? and %=range is entire file)
 
 
 
@@ -209,6 +209,75 @@ Malloc
 
 double *p;
 p = malloc ( n * sizeof *p );
+
+
+C Pointers and Memory Allocation
+
+
+The Problem - Passing the pointer's value rather than its address:
+
+int main(int argc, char *argv[]) 
+{
+	
+	int *a; 	// &a = 0xAAAAAA 	- int pointer a's address 
+	int b = 10;	// &b = 0xBBBBBB	- int b's address holds the value 10
+
+	
+			// a =  0x102938 	- a points to a random address because it's unassigned
+			// *a = 10034093	- a points to a random value held a 0x102938
+
+	a=&b					- assign int b's address to int pointer a
+
+			// &a = 0xAAAAAA	- a is still at the same address
+			//  a = 0xBBBBBB	- a now points to b's memory address
+			// *a = 10		- a now points to the value 10 held at 0xBBBBBB
+
+
+			// int * a and int * c are the same type...
+	f(a);		// This means we are passing int pointer a by value to f(int *) ....
+
+	return 0;
+
+}
+
+	
+f(int *c){
+
+			// &c = 0xCCCCCC	- int pointer c's address
+			// c  = 0xBBBBBB	- c now points to b's memory address
+			// *c = 10		- c now points to the value 10 held at 0xBBBBBB
+
+			// int pointer a's value was bassed to c 
+			// both int pointers a and c point to b now
+
+	*c=20; 		// b now = 20.
+
+	c = realloc(c, 1 * sizeof (c) ) // INVALID realloc because block was assigned outside this scope
+
+	c = malloc(1 * sizeof (c) ); // &c is now a new address block eg, 0xcccccc of which a and b are unaware...
+	
+	// These above methods do not allow the calling function to access new memory
+
+	// we could return c by value so that a would point to c's new block
+	// OR
+	// we could pass a's address by reference, f(&a) --> f(int **c) so 
+	// c's address = 0xAAAAAA
+}
+
+
+Pass by reference
+
+
+Returning by reference 
+
+
+
+
+Return by value
+
+
+
+
 
 
 

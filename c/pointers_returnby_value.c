@@ -15,8 +15,6 @@ int main(int argc, char *argv[])
 //	printf("*a=%i\n", *a);
 //	printf("*(++a)=%i\n", *(++a));
 
-	
-	// Invalid free
 	free(a);
 	return 0;
 

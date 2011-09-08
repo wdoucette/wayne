@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Pointer call by value example.
+// malloc issues
 
 void f(int *);
 
@@ -24,16 +26,18 @@ int main(int argc, char *argv[])
 
 			// int * a and int * c are the same type...
 	f(a);		// This means we are passing int pointer a by value to f(int *) ....
+	
+	
+	// Error - invalid delete 
+	// free(a);
+
+//	while( getchar() !='q') {
 
 
-
-	while( getchar() !='q') {
-
-
-	printf("Press q quit");
+//	printf("Press q quit");
 		
-		f(a);
-	}
+//		f(a);
+//	}
 	
 	return 0;
 
@@ -43,6 +47,9 @@ int main(int argc, char *argv[])
 	
 void f(int *c){
 
+	// int pointer c has been passed the value of int pointer a
+	// both and and c now point to b:
+	
 			// &c = 0xCCCCCC	- int pointer c's address
 			// c  = 0xBBBBBB	- c now points to b's memory address
 			// *c = 10		- c now points to the value 10 held at 0xBBBBBB
@@ -52,7 +59,7 @@ void f(int *c){
 
 	*c=20; 		// c=20 so b now =20 because c is pointing to 0xBBBBBB
 
-	//c = realloc(c, 1 * sizeof (c) ); // INVALID realloc because block was assigned outside this scope
+	// c = realloc(c, 1 * sizeof (c) ); // INVALID realloc because block was assigned outside this scope
 
 	c = malloc(1000 * sizeof (c) ); // &c is now a new address block eg, 0xcccccc of which a and b are unaware...
 	
@@ -65,11 +72,11 @@ void f(int *c){
 
 	// If we don't free c now, we will lose 1000 integers, 4000 bytes, every time this function is called
 	// because we will have no reference to it left
+	
+// IMPORTANT: free(c);
 
-//	free(c);
 
-
-char * msg ="\n\
+//char * msg ="\n\
 	// example output from valgrind after 1 iteration:\n\
 \
 	//==2382== HEAP SUMMARY:\n\
@@ -83,7 +90,7 @@ char * msg ="\n\
 	//==2382==    still reachable: 0 bytes in 0 blocks\n\
 	//==2382==         suppressed: 0 bytes in 0 blocks\n";
 
-	puts(msg);
+	//puts(msg);
 }
 
 

@@ -1,0 +1,78 @@
+#!/bin/bash
+#////////////////////////////////////////////////////////////////////////////////////////
+#/ 											#
+#/	AutoGit 									#
+#/ 											#
+#/ 	Produce a list of MIME type 'application/x-executable' files found by 		#
+#/   	recursive search of current working directory.					#
+#/											#
+#/	Usage:										#
+#/											#
+#/	Do: ./gitautoignore to append list to .gitignore in current directory		#
+#/											#
+#////////////////////////////////////////////////////////////////////////////////////////
+######################################################################################
+
+
+# TODO SEARCHPATH should be relative ./
+SEARCHPATH=./ 
+COMMENT="AutoIgnore"
+APP_NAME="AutoGit"
+
+#----- regex list of MIME type to ignore - uncomment to enable.
+
+MIME_TYPES="application/x-exe" 			# binary executables
+MIME_TYPES+="\|application/octet-stream" 	# databases, etc.
+#MIME_TYPES+="\|application/xml"
+#MIME_TYPES+="\|text/x-perl"
+#MIME_TYPES+="\|text/plain"
+
+
+# -----Initialize .gitconfig
+
+if [ ! -s ".gitignore" ]; then
+ 	echo "Initializing .gitignore"
+	# If .gitconfig is empty or missing, create it.
+	echo "#### File automatically generate by AutoGit ####" > .gitignore
+fi
+
+#----- Remove existing AutoGit entires by filtering COMMENT and clobbering .gitignore
+
+# TODO This doesn't tollerate an empty file due to requiring \n before <COMMENT...
+# however, we also want to filter the preceeding \n to avoid inserting blank lines on every update
+# Remember the nasty preceeding newline.
+sed -n '1h;1!H; ${;g;s/\(.*[^\n]\)[\n]*#<'${COMMENT}'>.*#<'${COMMENT}'\/>\(.*\)/\1\2/g;p}' .gitignore > /tmp/gitignore
+cp /tmp/gitignore ./.gitignore 
+
+
+#------Build search tree.
+
+# Recures SEARCHPATH to produce tree of files to be tested.
+find $SEARCHPATH -name "*" -print  > /tmp/$APP_NAME.searchtree
+
+
+#------Match MIME types.
+
+# Test MIME type from tmp file tree, strip leading ./ on files in current dir. 
+file --mime-type -f /tmp/$APP_NAME.searchtree | grep -h -e "$MIME_TYPES"| cut -d : -f 1 | sed "s/^\.\/\(.*\)/\1/" > /tmp/$APP_NAME.newignores
+
+
+#-------Build new .gitignore
+
+# Append matched files to .gitignore 
+echo "#<$COMMENT>" >> .gitignore
+cat /tmp/$APP_NAME.newignores >> .gitignore 
+echo "#<$COMMENT/>" >> .gitignore
+
+
+#------Display results.
+
+echo
+tac /tmp/$APP_NAME.newignores > /tmp/$APP_NAME.msg
+echo "AutoGit --> Files sent to .gitignore:" >> /tmp/$APP_NAME.msg 
+tac /tmp/$APP_NAME.msg | more
+echo
+git status
+echo
+echo 'Now try: git commit -a -m "[...commit message...]" to add and commit.'
+
