@@ -14,10 +14,6 @@
 ######################################################################################
 
 
-# TODO SEARCHPATH should be relative ./
-SEARCHPATH=./ #$PWD 
-COMMENT="AutoIgnore"
-APP_NAME="AutoGit"
 
 #----- regex list of MIME type to ignore - uncomment to enable.
 
@@ -26,6 +22,16 @@ MIME_TYPES+="\|application/octet-stream" 	# databases, etc.
 #MIME_TYPES+="\|application/xml"
 #MIME_TYPES+="\|text/x-perl"
 #MIME_TYPES+="\|text/plain"
+
+
+# Directories to exclude from search.
+
+EXCLUDE_DIRS="\.git"
+
+# TODO SEARCHPATH should be relative ./
+SEARCHPATH=./ #$PWD 
+COMMENT="AutoIgnore"
+APP_NAME="AutoGit"
 
 
 # -----Initialize .gitconfig
@@ -47,8 +53,10 @@ cp /tmp/gitignore ./.gitignore
 
 #------Build search tree.
 
-# Recures SEARCHPATH to produce tree of files to be tested.
-find $SEARCHPATH -name "*" -print  > /tmp/$APP_NAME.searchtree
+# Recurses SEARCHPATH to produce tree of files to be tested.
+# TODO try this: 
+#find . -regex ????? -type f -exec file '{}' \;
+find $SEARCHPATH -type f -name "*" | grep -v $EXCLUDE_DIRS > /tmp/$APP_NAME.searchtree
 
 
 
@@ -73,7 +81,9 @@ tac /tmp/$APP_NAME.newignores > /tmp/$APP_NAME.msg
 echo "AutoGit --> Files sent to .gitignore:" >> /tmp/$APP_NAME.msg 
 tac /tmp/$APP_NAME.msg | more
 echo
+git add .gitignore
 git status
 echo
 echo 'Now try: git commit -a -m "[...commit message...]" to add and commit.'
-
+# Cleanup.
+rm -f /tmp/$APP_NAME*

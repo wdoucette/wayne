@@ -1,5 +1,4 @@
 #### File automatically generate by AutoGit ####
 #<AutoIgnore>
-test/bash
-.autogit.swp
+bash
 #<AutoIgnore/>
