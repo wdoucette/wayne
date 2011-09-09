@@ -3,12 +3,12 @@
 #/ 											#
 #/	AutoGit 									#
 #/ 											#
-#/ 	Produce a list of MIME type 'application/x-executable' files found by 		#
+#/ 	Produce a list of files matching MIME type found by 				#
 #/   	recursive search of current working directory.					#
 #/											#
 #/	Usage:										#
 #/											#
-#/	Do: ./gitautoignore to append list to .gitignore in current directory		#
+#/	Do from git root: ./autogit 							#
 #/											#
 #////////////////////////////////////////////////////////////////////////////////////////
 ######################################################################################
