@@ -7,10 +7,10 @@ void f(int **);
 int main(int argc, char *argv[])
 {
 	
-	int *a = NULL;
+	int *a; //= NULL;
 	printf("\naddress of a is %p\n", &a);
 	printf("a[0]= %d\n", a[0]);
-	printf("
+	printf("a =%p\n", a);
 	f(&a);
 
 	printf("a[0]= %d\n", a[0]);
