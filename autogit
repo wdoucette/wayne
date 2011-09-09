@@ -15,7 +15,7 @@
 
 
 # TODO SEARCHPATH should be relative ./
-SEARCHPATH=./ 
+SEARCHPATH=./ #$PWD 
 COMMENT="AutoIgnore"
 APP_NAME="AutoGit"
 
@@ -49,6 +49,7 @@ cp /tmp/gitignore ./.gitignore
 
 # Recures SEARCHPATH to produce tree of files to be tested.
 find $SEARCHPATH -name "*" -print  > /tmp/$APP_NAME.searchtree
+
 
 
 #------Match MIME types.
