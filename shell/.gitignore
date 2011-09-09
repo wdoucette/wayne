@@ -1,6 +1,0 @@
-#### File automatically generate by GitAutoIgnore ####
-#<AutoIgnore>
-bash
-test-exe
-mydb.sqlite3
-#<AutoIgnore/>
