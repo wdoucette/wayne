@@ -278,6 +278,14 @@ Return by value
 
 
 
+Git
 
+Show difference between HEAD^ (previous HEAD) and HEAD (current HEAD)
 
+git diff HEAD^ HEAD 
 
+Show difference bewteen 3 heads-ago and now, limited to filename
+git diff HEAD~3 HEAD -- filename
+
+Selectively apply (chunks) of working directory filename changes to the staging area (index).
+git add --patch filename
