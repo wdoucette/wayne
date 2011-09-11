@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
 void callByValue(int []);
 void callByReference(int *[]); 
 
@@ -14,16 +15,17 @@ int main(int argc, char *argv[])
 	 
 //	Conventions:
 
-//	All examples use functioning code in context. This means you can copy-past, compile and execute.
-//	is. The top of each example gives a textual overview of the purpose and program flow, with expected 
+//	All examples use functioning code in context. This means you can copy-paste, compile and execute.
+//	The top of each example gives a textual overview of the purpose and program flow, with expected 
 //	output  
+
+
 
 
 //	A factor causing confusion with pointers is the language syntax itself.
 //	The '*' character, for example, is used for two related, but entirely different operations
 //	when working with pointers. Lets clear up the confusion by illistrating a few examples while 
 //	compare syntax styles.	
-
 
 
 
