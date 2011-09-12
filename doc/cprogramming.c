@@ -67,11 +67,6 @@ int main(int argc, char *argv[])
  * 	- Declaring a variable allocates memory space to store it. However, until a variable 
  * 	has been initialized, it will contain unpritictable values ...
  */
-<<<<<<< HEAD
-	
-=======
-	
-	
 
 	printf(" --> the memory address of i = %p\n", &i ); 	 
 
@@ -156,137 +151,31 @@ int main(int argc, char *argv[])
 
  	pt[0] = 789; 	
 	
-	printf(" --> the value of i[0] is: %d\n", i[0] ); 	 
+	printf(" --> the value of i[0] is: %d\n", pt[0] ); 	 
  
 /*
- * 	--> the value of i[0] is: 456
+ * 	--> the value of i[0] is: 789
+ *
+ *
+ * 	 ... Notice that pt[0] is equivalent to *i ...
 */
 	
-	printf(" --> the value of i[1] is: %d\n", i[1] ); 	 
+	printf(" --> the value of pt[1] is: %d\n", pt[1] ); 	 
 /*
  * 
- * 	--> the value of i[0] is: 100010 	???
+ * 	--> the value of pt[0] is: 100010 	???
  *
  *
- * 	As with other types, pointers to uninitialize locations also return indeterminate  values.
- * 	-I prefer this indexed array style syntax becase it is clear to me that ptr[0] will evaluate to 
- * 	get back the first 'element' of ptr.
- *
-*
-* / 	
->>>>>>> 0493bb8378ad63ae747d0bd29bd67c88cda6386c
-	
-
-	printf(" --> the memory address of i = %p\n", &i ); 	 
-
-/*	
- *	--> the memory address of i = 0xAAAAAA	
- *
- *
- * 	... The '&' charactor tells the compiler that we want a variable's address, NOT its value ...
-*/
-
- 	i = 123;	
-				
-	printf(" --> the value of i is: %d\n", i );
-
-/*
- * 	--> the value of i is: 123
+ * 	... As with other types, pointers to uninitialize locations also return indeterminate  values ...
  * 	
- * 	
- * 	- Interger i has now been initialized: The memory address 0xAAAAAA now contains the value 123 ...
- *
- * 	... While not considered pointers, even primitive variables can be thought of as 'pointing to
- * 	a memory address in which their value is stored ...
-*/
-
-
-
-/* POINTERS:
- *
- * 
- * 	C is inherently a pass-by value language - This means that a function makes it's
- * 	own locally copy of each parameter it receives.	Similarly, anyhing returned from a function 
- * 	is copied locally back inside the calling function. Pointers are implemented to pass memory 
- * 	addresses which reference some other external value without having to duplicate the entire value.
- *
- * 	Passing a pointer is in fact, passing a reference. Thus the term 'pass by reference'. 
- *
-*/
-
-	int * pt; 
- 	
-/*
- *	... The int * operator tells the compiler that we want to declare an integer pointer type ...
-*
-*/  	
-`
-	printf(" --> the memory address of pt = %p\n", &pt );
-
-/*	
- *	--> the memory address of pt = 0xFFFF00
-*/ 
-	
-	printf(" --> the value of pt = %p\n", pt ); 	
-
-/*	
- *	--> the value of of pt = 0x100101	???
  *
  *
- * 	- Pointers are allocated a memory address just like other types and their values are also
- *  	  inditerminate until properly initialize -in other words, they point to random memory locations. 
-*/
-
-
-	pt = &i; 	
-
- 	printf(" --> the memory address of pt = %p\n", &pt );
-
-/*	
- *	--> the memory address of pt = 0xFFFF00
+ * 	-I prefer this indexed array syntax style becase it is clear to me that pt[0] will evaluate to 
+ * 	get back the first 'element' of pt.
  *
- *
- *	- Pointer pt has been assigned int i's memory address -  0xFFFF00 now contains a's address.
- *
- *
- *  	... I like to think of this as setting the pointer's 'base reference' address ...
- *
-*/ 
-
- 	*pt = 456;  
-
-	printf(" --> i's value is now: %d\n", i ); 	 
-
-/*
- *	--> the value i is now: 456
- *
- *
- * 	Here we see the '*' character again, but this time it means 'return the value ptr points to.' 
- *
- * 	We can achieve the same result using different  sytax:
-*/ 	
- 	
-
-	pt[0] = 789; 	
-	
-	printf(" --> the value of i[0] is: %d\n", i[0] ); 	 
- 
-/*
- * 	--> the value of i[0] is: 456
-*/
-	
-	printf(" --> the value of i[1] is: %d\n", i[1] ); 	 
-/*
- * 
- * 	--> the value of i[0] is: 100010 	???
- *
- *
- * 	- As with other types, pointers to uninitialize locations also return indeterminate values.
- * 	I prefer this indexed array style syntax becase it is clear to me that ptr[0] will evaluate to 
- * 	get back the first 'element' of ptr.
  *
 */ 	
-	
+
 
 // 	Arrays and pointer arithmatic.
 
