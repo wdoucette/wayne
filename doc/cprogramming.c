@@ -11,70 +11,166 @@ void alloc2(int *);
 int main(int argc, char *argv[])
 {
 
-//	Understanding Pointers and Memory Allocation in C	
+/*	Understanding Pointers and Memory Allocation in C	
 	 
-//	Conventions:
+	Conventions:
 
-//	All examples use functioning code in context. This means you can copy-paste, compile and execute.
-//	The top of each example gives a textual overview of the purpose and program flow, with expected 
-//	output  
+	All examples use functioning code in context. This means you can copy-paste, compile and execute all 
+	examples. The top of each example gives an overview of the purpose and program flow, with expected 
+	output.
 
-
-
-
-//	A factor causing confusion with pointers is the language syntax itself.
-//	The '*' character, for example, is used for two related, but entirely different operations
-//	when working with pointers. Lets clear up the confusion by illistrating a few examples while 
-//	compare syntax styles.	
+	Code is what you see is what you get - printf() is used to format all output examples, exactly
+	the way real code works.
 
 
+	the statement: 
+		
+		printf(" --> the memory address of int a is: %p\n", &a);    
+
+	will output:
+
+		--> the memory address of int a is: 0xEA12C4
+	
+
+	Notes:
+
+		Special formatting characters recognized by printf() are:
+		%p - a hex number
+		%i - an integer
+		%d - a double
+		%s - a string 
+		%c - a char
+		\n - new line
+
+##################################################################################################################
+
+
+
+	One factor causing confusion with pointers is the language syntax itself.
+	The '*' character, for example, is used for two related, but entirely different operations
+	when working with pointers. Lets clear up the confusion by illistrating a few examples while 
+	compare syntax styles...	
+
+*/
+
+
+// VARIABLES:
 
  	int i; 
+	printf(" --> the value of i is: %d\n", i );
 
-// 	Declaring i as an integer will allocate a memory block of 4 bytes. However, since 
-//	int i is uninitialized, the 4 bytes it occupies will contain unpredictable values.
+
+/*
+ *	--> the value of i is: -1000010	???
+ *
+ *
+ * 	- Declaring a variable allocates memory space to store it. However, until a variable 
+ * 	has been initialized, it will contain unpritictable values ...
+ */
+	
 	
 
-	// Print int i's address - &i
+	printf(" --> the memory address of i = %p\n", &i ); 	 
 
-	printf(" --> &i = %p\n", &i); 	 
+/*	
+ *	--> the memory address of i = 0xAAAAAA	
+ *
+ *
+ * 	... The '&' charactor tells the compiler that we want a variable's address, NOT its value ...
+*/
 
-	// --> &i = 0xAAAAAA 			// i's memory address
+ 	i = 123;	
+				
+	printf(" --> the value of i is: %d\n", i );
 
- 	i = 123					// Assign memory address location 0xAAAAAA = 123.
-
-
-//	-While not considered pointers, even primitive variables can be thought of as 'pointing to'
-//	 a memory address in which their value is stored.
-
-
-
-	// Pointers
-
-	int * pt 			// Define pt as type int * (a pointer to an integer)
- 	printf(" --> &pt = %p\n", &pt) 	// Print pt's memory address:
-
-	// --> &pt = 0xFFFF00.
+/*
+ * 	--> the value of i is: 123
+ * 	
+ * 	
+ * 	- Interger i has now been initialized: The memory address 0xAAAAAA now contains the value 123 ...
+ *
+ * 	... While not considered pointers, even primitive variables can be thought of as 'pointing to
+ * 	a memory address in which their value is stored ...
+*/
 
 
- 	pt = &i 	
+
+/* POINTERS:
+ *
+ * 
+ * 	C is inherently a pass-by value language - This means that a function makes it's
+ * 	own locally copy of each parameter it receives.	Similarly, anyhing returned from a function 
+ * 	is copied locally back inside the calling function. Pointers are implemented to pass memory 
+ * 	addresses which reference some other external value without having to duplicate the entire value.
+ *
+ * 	Passing a pointer is in fact, passing a reference. Thus the term 'pass by reference'. 
+ *
+*/
+
+	int * pt; 
+ 	
+	printf(" --> the memory address of pt = %p\n", &pt );
+
+/*	
+ *	--> the memory address of pt = 0xFFFF00
+ *
+ *	... The int * operator tells the compiler that we want to declare an integer pointer type ...
+*/	
 	
-// 	pt's address (0xFFFF00) now contains the value 0xAAAAAA - i's address. I like to think 
-//	of this as setting a pointer's 'base reference' address.
+ 	printf(" --> the value of pt = %p\n", pt ); 	
 
+/*	
+ *	--> the value of of pt = 0x100101	???
+ *
+ *
+ *
+ * 	- Pointers are allocated a memory address just like other types and their values are also
+ *  	  inditerminate until properly initialize -in other words, they point to random memory locations. 
+*/
 
- 	*pt = 456 	// i now = 456! 
+ 	pt = &i; 	
+/* 
+ * 	
+ * 	- int pointer pt has been assigned i's memory address.
+ *
+ *
+ *  	... I like to think of this as setting the pointer's 'base reference' address ...
+ *
+*/ 
 
-//	Here we see the '*' character again, but this time it means 'return the value ptr points to.'
-// 	We can achieve the same result using different  sytax:
+ 	*pt = 456;  
 
+	printf(" --> the value i contains = %d\n", i ); 	 
+/*
+ *	
+ *	--> the value i contains = 456
+ *
+ *
+ * 	Here we see the '*' character again, but this time it means 'return the value ptr points to.'
+ *
+ * 	We can achieve the same result using different  sytax:
+*/
 
- 	pt[0] = 789; 	// i now = 789
- 	pt[1] = ??? 	// points to an unallocated location!
-
-
-// 	-I prefer this indexed array style syntax becase it is clear to me that ptr[0] will evaluate to 
-//	get back the first 'element' of ptr.
+ 	pt[0] = 789; 	
+	
+	printf(" --> the value of i[0] is: %d\n", i[0] ); 	 
+ 
+/*
+ * 	--> the value of i[0] is: 456
+*/
+	
+	printf(" --> the value of i[1] is: %d\n", i[1] ); 	 
+/*
+ * 
+ * 	--> the value of i[0] is: 100010 	???
+ *
+ *
+ * 	As with other types, pointers to uninitialize locations also return indeterminate  values.
+ * 	-I prefer this indexed array style syntax becase it is clear to me that ptr[0] will evaluate to 
+ * 	get back the first 'element' of ptr.
+ *
+*
+* / 	
 	
 
 
@@ -110,10 +206,6 @@ int main(int argc, char *argv[])
 
 
 // 	Memory Allocation 
-
-//	C is inherently a pass-by value language. This means that a called function makes it's
-//	own locally copy of each parameter it receives.	Similarly, anyhing returned from a function
-//	is copied locally back inside the calling function.
 
 	#include <stdio.h>
 
