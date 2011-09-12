@@ -1,4 +1,8 @@
-CFLAGS+= -Wall -g -lm
+CFLAGS+= -Wall -g -mtune=native
+
+
+#i686
+#native
 
 all: ex1 ex2
 

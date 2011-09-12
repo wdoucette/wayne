@@ -91,7 +91,13 @@ set: invlist -Display control characters
 :%s/Find/Replace/g - global search and replace (g=multiline??? and %=range is entire file)
 
 
+Omni completion - aka Intellisense(tm)
 
+Set in vimrc:
+filetype plugin on
+set ofu=syntaxcomplete#Complete
+
+In insert mode, ^x ^o to activate 
 
 
 
@@ -289,3 +295,77 @@ git diff HEAD~3 HEAD -- filename
 
 Selectively apply (chunks) of working directory filename changes to the staging area (index).
 git add --patch filename
+
+
+
+
+
+
+
+sprintf
+
+int  sprintf ( char * buffer, const char * format [ , argument , ...] ); 
+
+Ill explain the following piece by peice:
+
+Buffer:
+The buffer is the place to store the resulting string from using the function(notice its also a pointer. so it points to the specific buffer in memory)
+
+Format:
+This is the string that contains the text to be printed.
+It can also be used to contain format tags
+
+Format flags should follow this:
+
+%[flags][width][.precision][modifiers]type
+
+The types that youll insert are explained here:
+Type - Description - Example
+c      | Character    | a 
+e      |Sci Notation  | 1.42e34
+E      |Sci Notation  | 1.42E34
+f       |Dec. Float    | 193.53
+o      |Signed Octal | 610
+d or i |Integer        | 32
+s      | String         | sprintf rocks
+u      |unsigned Dec| 43525
+p      |Address point| A340:0000
+x      |Hexadecimal  | 3fa
+X      |Hexadecimal  | 3FA
+n      |Nothing         |
+
+The diffences between x and X or e and E is that they print capital letters instead of lower case(3fa would be printed with x and 3FA would be printed with X)
+
+The flags, width, .precision, modifiers are completely optional but if youd like to input them heres what they are:
+
+Flags          -          Description
+-               | Left align the with given width(right is default)
++              | Forces to preced with positive/negative sign(- is default)
+blank         | If the arg is + signed then a blank is inserted before
+#              |1. Used with f, e, E makes output contain decimal
+               |2. Used with x, X, o value is preced with 0, 0x, 0X
+
+
+width         -         Description
+number       |   Minimum number of characters to be printed   If the value to be printed is shorter than this number the result is padded with blanks. The value is never truncated even if the result is larger. 
+
+0number      | Same as above but filled with 0s instead of blanks. 
+
+*                | The width is not specified in the format string, it is specified by an integer value preceding the argument thas has to be formatted. 
+*
+*                .precision:
+*                for d, i, o, u, x, X types: precision specifies the minimum number of decimal digits to be printed. If the value to be printed is shorter than this number the result is padded with blanks. The value is never truncated even if the result is larger.(if nothing specified default is 1).
+*                for e, E, f types: number of digits to be printed after de decimal point. (if nothing specified default is 6).
+*                for g, G types : maximum number of significant numbers to be printed.
+*                for s type: maximum number of characters to be printed. (default is to print until first null character is encountered).
+*                for c type : (no effect).
+*
+*                Thats the best description i could find
+*
+*                modifier                 -          Description
+*                h                         | Interpreted as a short int
+*                l                          | Interpreted as a long int(integers) or double (floats)
+*                L                         | Interpreted as a long double(floats)
+*
+*                The [arguments] command is an elipses so you can put as many types of arguments as you want.
+time program args ... returns time to return

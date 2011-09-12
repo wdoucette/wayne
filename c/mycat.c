@@ -6,7 +6,10 @@
 // ioFgets reads/writes one line at a time.
 // ioFread reads and writes buffered chunks using fread().
 
-
+//...//////////////????TEST VERSION
+//
+//
+//
 void ioGetc(char *fname);
 void ioFgets(char * fname);
 void ioFread(char * fname);
