@@ -6,10 +6,6 @@
 // ioFgets reads/writes one line at a time.
 // ioFread reads and writes buffered chunks using fread().
 
-//...//////////////????TEST VERSION
-//
-//
-//
 void ioGetc(char *fname);
 void ioFgets(char * fname);
 void ioFread(char * fname);
@@ -46,9 +42,6 @@ int main(int argc, char*argv[])	{
 void ioGetc(char * fname){
 
 	// Here we read and write one character at a time.
-	
-	fprintf(stderr, "Pumping file: %s to stdout using fgetc() --> putc()\n", fname);
-	
 	FILE *f;
 	int i;
 	
@@ -58,58 +51,53 @@ void ioGetc(char * fname){
 		putc(i,stdout);
 
 	fclose(f);
+
+	fprintf(stderr, "Pumping file: %s to stdout using fgetc() --> putc()\n", fname);
 }
 
 void ioFgets(char * fname){
 
 	// The problem here is we dont know the line length, so n or less characters are read.
 	// If the last char is not EOL, the the line was truncated and continues.
-
-	fprintf(stderr, "Pumping file: %s to stdout using fgets() --> fputs()\n", fname);
-	
 	FILE * f;
-	int n = 1024;
-	char str[n];
-	char * ptr = &str[0];
+	int len = 1024;
+	char buff[len];
 	
 	f = fopen(fname, "r");
 	
-	while ( (fgets(ptr, n, f) !=NULL ) )
-		fputs(str, stdout);
+	while ( (fgets(buff, len, f) !=NULL ) )
+		fputs(buff, stdout);
 
 	fclose(f);
+	
+	fprintf(stderr, "Pumping file: %s to stdout using fgets() --> fputs()\n", fname);
 }
 
 
 void ioFread(char * fname) {
 
 	// Here we read size*n chunks with the possibility of optimizing the chunk size.
-
-	fprintf(stderr, "Pumping file: %s to stdout using buffered fread() --> fputs())\n", fname);
-
 	FILE *f;
 	size_t size =1;
 	size_t n=1024;
-	int i[size * n];
-	void * ptr;
-	
-	ptr = &i;
+	int buff[size * n];
 	
 	f=fopen(fname, "r");
 
-	while( (fread(ptr, size, n, f)) !=0 )
-		fputs(ptr, stdout);
+	while( (fread(buff, size, n, f)) !=0 )
+		fputs((const char *) buff, stdout);
 
 	fclose(f);
 
+	fprintf(stderr, "Pumping file: %s to stdout using buffered fread() --> fputs())\n", fname);
 }
 
 
 void usage(void) {
 
 		fprintf(stderr, "Usage -- mycat filename [1 | 2 | 3]\n");
-		exit(1);
 
+		exit(1);
 
 }
 
