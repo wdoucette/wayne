@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# exe_test launcher
+# required by time to encapsulate shell process
+
+# $1 = mode
+# $2 = app to test
+# $3 = app args
+APP=$1
+ARGS=$2
+#SENDTO=$3
+
+COMMAND="time -p ./exe_test $APP $ARGS" #1>$SENDTO"
+
+echo >&2
+echo "processing: " $COMMAND >&2
+$COMMAND 

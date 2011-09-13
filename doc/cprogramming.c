@@ -127,40 +127,46 @@ int main(int argc, char *argv[])
 */
 
  	pt = &i; 	
-/* 
- * 	
- * 	- int pointer pt has been assigned i's memory address.
+
+	printf(" --> the value of pt = %p\n", pt );
+
+/*	
+ *	--> the value of pt = 0xAAAAAA
  *
+ *	
+ *	- The memory location 0xFFFF00 now contains the value 0xAAAAAA. 
+ *  
  *
  *  	... I like to think of this as setting the pointer's 'base reference' address ...
- *
 */ 
+
 
  	*pt = 456;  
 
-	printf(" --> the value i contains = %d\n", i ); 	 
+	printf(" --> the value of i is now %d\n", i ); 	 
 /*
  *	
- *	--> the value i contains = 456
+ *	--> the value of i is now 456
  *
  *
  * 	Here we see the '*' character again, but this time it means 'return the value ptr points to.'
  *
- * 	We can achieve the same result using different  sytax:
+ * 	We can achieve the same result using different sytax:
 */
 
  	pt[0] = 789; 	
 	
-	printf(" --> the value of i[0] is: %d\n", pt[0] ); 	 
+	printf(" --> the value of i is: %d\n", pt[0] ); 	 
  
 /*
- * 	--> the value of i[0] is: 789
+ * 	--> the value of i is: 789
  *
  *
- * 	 ... Notice that pt[0] is equivalent to *i ...
+ * 	 ... Notice that pt[0] is equivalent to *pt ...
 */
 	
 	printf(" --> the value of pt[1] is: %d\n", pt[1] ); 	 
+
 /*
  * 
  * 	--> the value of pt[0] is: 100010 	???
@@ -169,26 +175,30 @@ int main(int argc, char *argv[])
  * 	... As with other types, pointers to uninitialize locations also return indeterminate  values ...
  * 	
  *
- *
  * 	-I prefer this indexed array syntax style becase it is clear to me that pt[0] will evaluate to 
- * 	get back the first 'element' of pt.
- *
- *
+ * 	get back the first 'element' of pt, that is, integer i .
 */ 	
 
 
-// 	Arrays and pointer arithmatic.
+/* 
+ * ARRAYS and POINTER ARITHMATIC:
+*/
 
-
- 	int i[4]; 		// Declare an array of integers and initialize values:
-
- 	i[0] =10;	
+/*
+ * 	Declare an array of integers and initialize values: ...
+*/
+ 	int i[4]; 		
+ 	
+	i[0] =10;	
  	i[1] =20;
  	i[2] =30;
  	i[3] =40;
 	
 
- 	int * pt = &i; 	// Set ptr base reference address.
+/*
+ *	Set pt base reference to i[0]:
+*/ 
+ 	int * pt = &i; 	
 	
  	pritnf(" --> pt[0] = %d\n", pt[0]); 		
 

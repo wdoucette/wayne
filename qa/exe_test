@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Executes command with arguments. Capturing stdout in $RESULT keeps 
+# stdout clean while maintaining the same performance bottleneck
+# as dumping to stdout
+
+# time measures return time
+
+# Usage 
+# ./exit_test ./test_prog args
+set -e
+COMMAND="$1 $2 $3"
+echo >&2
+echo "exe_test command: $COMMAND" >&2 
+
+# Dont bring into shell
+$COMMAND  || { echo "Shell Error: " >&2 ; exit 1 ; }
+
+# Bring into shell 
+#RESULT=`$COMMAND` || { echo "Shell Error: " ; exit 1 ; }
+#echo $RESULT > /dev/null

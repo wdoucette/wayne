@@ -1,3 +1,6 @@
+SHELL
+
+
 Shell History
 
 Shell history is archived to ~/.bash_history when the shell is exited, however, history can be easily lost under certain circumstances such when multiple shells are open for the same user or when the shell is improperly shut down.
@@ -13,6 +16,41 @@ The PROMPT_COMMAND is a bash [env]ironment variable that is evaluated each time 
 PROMPT_COMMAND='history 1 >> /${HOME}/hist'
  
 Upon returning, the last shell command is automatically appended to an external archive history file.
+
+
+Misc
+
+: >	//clobber a file to 0 len
+
+1>filename	// redirect stdout to filename
+2>filename	/// ... sterr ...
+&>filename 	// ... both ...
+
+
+D>N		// [D]iscriptor,defaults to 1  > file[Name] 		
+D>&D		// [D] to another [D]
+
+
+exec 3<> /tmp/fdtest	// Define a file descriptor.
+
+			// Random access
+read -n 4 <&3           // Read only 4 characters.
+echo -n . >&3           //  # Write a decimal point there.
+exec 3>&-               //  # Close fd 3.
+    
+
+
+
+
+
+File Descriptors
+
+
+
+
+
+
+
 
 Loopback Filesystem - filesystem within a file.
 
