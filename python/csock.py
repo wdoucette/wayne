@@ -5,6 +5,9 @@
 
 import socket
 
+
+#TODO investigate buff size max -mtu 1388? is there a way to detect?
+
 def fetch(host, PORT, headers) :
 
 #	print("HOST: {0}".format(host))
@@ -19,7 +22,7 @@ def fetch(host, PORT, headers) :
 	buff = bytes()
 	while True :
 		data = s.recv(1388)
-		print(data)
+		#print(data)
 		buff += data#.decode('UTF-8')
 		if len(data) < 1388 : break	
 		

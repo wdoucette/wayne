@@ -8,28 +8,92 @@ import socket
 import sys
 import io
 import re
+import logging
+import getopt
+
+
+def usage() :
+
+	print("""Usage:
+-h --help : this menu
+--verbosity= [ Info | Warn | Error | Debug ]
+-d log level DEBUG
+-l [filename] | --logfile=[filename]
+""")
+
+
+def init(logging) :
+	"""Initialize and configure program logging etc.
+
+"""
+	# Defaults
+	log_level = 'critical'
+	logfile_name = ""
+	
+	try :
+		opts, args = getopt.getopt(sys.argv[1:], '-h-d-l:', ['help', 'verbosity=', 'logfile='])
+	
+	except getopt.GetoptError as err :
+		
+		logging.error(err)
+		usage()
+		exit(2)
+
+	for o, a in opts :
+
+		if o in ("-h", "--help"):
+			usage()
+			exit(0)
+
+		if o in ("-d", "--verbosity"):
+
+			if o == '-d' : a = 'DEBUG' # be verbose
+			log_level = a.upper()
+
+						#logging.debug("set logging to %s" %a.upper())
+		if o in ("-l", "--logfile"):
+
+			# Set log level and log filename.
+			logfile_name = a
+			logfile_mode = 'w'
+	
+
+	# Apply log options.	
+
+	n_log_level= getattr(logging, log_level.upper(), None)
+	if not isinstance(n_log_level, int):
+    				raise ValueError('Invalid log level: %s' % a)
+
+	if logfile_name == "" :
+	
+		# Set log level only.
+		logging.basicConfig(level=n_log_level)
+		logging.info("Set log level %s" % log_level)
+	else : 
+		# Set log level and filename	
+		logging.basicConfig(filename=logfile_name, filemode=logfile_mode, level=n_log_level)
+		logging.info("Set log level to %s and log file to %s" % (log_level, logfile_name))
+
 
 
 def parse_full_get(get_request) :
 
 	"""Determines protocol, host, port and filepath from HTTP GET request.
-
 # Example test cases: 
 >>> print(parse_full_get("https://domain.com/"))
-No port specified, defaulting.
 {'path': '', 'host': 'domain.com', 'port': '443', 'proto': 'https'}
 
->>> print parse_full_get("http://mydomain.com:8081/path/to/file")
+>>> print(parse_full_get("http://mydomain.com:8081/path/to/file"))
 {'path': 'path/to/file', 'host': 'mydomain.com', 'port': '8081', 'proto': 'http'}
 
->>> print parse_full_get("127.0.0.1:8081/")
-No protocol specified, defaulting to http.
+>>> print(parse_full_get("127.0.0.1:8081/"))
 {'path': '', 'host': '127.0.0.1', 'port': '8081', 'proto': 'http'}
 
->>> print parse_full_get("/direct/request/relative/path")
+>>> print(parse_full_get("/direct/request/relative/path"))
 Traceback (most recent call last):
 RuntimeError: Direct requests not allowed. Requested path was: direct/request/relative/path
 """
+
 	dic = {}
 
 	if get_request.find('/') == 0 :
@@ -45,11 +109,12 @@ RuntimeError: Direct requests not allowed. Requested path was: direct/request/re
 	except IndexError :
 
 		# No protocol specified.
-		print('No protocol specified, defaulting to http.')
 		proto = "http"
-	
+
+		logging.debug('No protocol specified, defaulting to %s.' % proto)
+
 	hostport = get_request.split('/')[0]
-		
+	
 	host = hostport.split(':')[0]
 	
 	try :
@@ -57,11 +122,12 @@ RuntimeError: Direct requests not allowed. Requested path was: direct/request/re
 
 	except IndexError :
 
-		print('No port specified, defaulting.')
 		if proto == 'http' : port = '80'
 		if proto == 'ftp' : port = '21'
 		if proto == 'https' : port = '443'
 		
+		logging.debug('No port specified, defaulting to %s.' % port)
+
 	dic['host'] = host
 	dic['path'] = get_request[get_request.find('/')+1:]
 	dic['port'] = port
@@ -72,9 +138,10 @@ RuntimeError: Direct requests not allowed. Requested path was: direct/request/re
 
 if __name__ == "__main__":
 	
+	init(logging)
 	import doctest
 	doctest.testmod()
-
+	
 
 # Establish proxy server on localhost:8081
 HOST = 'localhost' # Symbolic meaning all available interfaces
@@ -83,12 +150,13 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 5)
 s.bind((HOST, PORT))
 s.listen(5)
+
 conn, recv = s.accept()
 print("Conntectd by: ", recv)
 #TODO thread for multiple requests, persist
 #TODO opts
 #TODO mangle header
-#TODO log
+#DONE log
 
 
 #open in binary write mode, no need to cast byte(ascii)
@@ -109,18 +177,25 @@ while True :
 	buff += data.decode('ascii')
 	if (len(data) < buff_len) : # Buffer not full, end of stream. #if ( (not data) | (len(data)< buff_len)): 
 	
-		print("Request complete. Client SHUT stream. Replying...")
+		logging.info("Request complete. Client SHUT stream. Replying...")
 
 		data = buff
-		print(buff)
+		logging.info(buff)
 		# regex for requested /page
 		p = re.compile('GET (.*) HTTP(.*)')
+		
+		get_request = p.match(data).group(1).strip()		
+		
 		try :
-			get_request = p.match(data).group(1).strip()		
-		except RuntimeError :
-			exit(1)
-		dic = parse_full_get(get_request)
-
+			dic = parse_full_get(get_request)
+	
+		except RuntimeError as err :
+	
+			logging.error(err)
+			conn.close()			
+			conn, recv = s.accept()
+			continue
+	
 		proto = dic['proto']
 		host = dic['host']
 		port = dic['port']
@@ -146,18 +221,10 @@ while True :
 	#	path = "Path: %s %s\n" % (host, page)
 	
 
-		print("proto: {0}".format(proto))
-		print("host: {0}".format(host))
-		print("port: {0}".format(port))
-		print("path: {0}".format(path))
-#	
-		exit()	
 		# relay intact headers
 		headers = data
 		content = get_page(host, 80, headers)
 		
-
-	
 		#string = data #bytes(data,'ascii')#"Accept: text/html\n\rContetn-Encoding: gzip;bjzip"
 		#print("Data {0}".format(data))
 		
@@ -171,12 +238,16 @@ while True :
 		# Send ascii response as byte values
 
 		conn.send(content)
-		print("Sent {0} bytes".format(len(content)))
-		break
+		logging.info("Sent {0} bytes".format(len(content)))
 
+		#break
+		
+		# Close and reinitialize socket.
+		conn.close()			
+		conn, recv = s.accept()
+		continue
+	
 
-conn.close()
 print(len(content))
 f.write(bytes(data,'ascii'))
-
 
