@@ -38,15 +38,13 @@ class client_thread(threading.Thread) :
         
 
     def run(self) :
-        buff = ""
-        buff_len = 4096
-        data2 = bytes()
+        buff_len = 1024
+        buff = bytes()
 
         while True :
             
             data = self.clientsocket.recv(buff_len)
-            data2 += data
-            buff += data.decode('ascii')
+            buff += data
             logging.debug("Client thread read {0} byte chunk. {1} bytes total.".format(len(data), len(buff)) )
             
             if len(data) < buff_len : 
@@ -56,7 +54,6 @@ class client_thread(threading.Thread) :
        
         logging.debug("Client request received. Processing proxy request...")
 
-        data = buff
         #logging.info(buff)
         # regex for requested /page
         #TODO GET | POST | ... ?
@@ -64,9 +61,9 @@ class client_thread(threading.Thread) :
         p = re.compile('GET (.*) HTTP(.*)')
 
         try :
-            get_request = p.match(data).group(1).strip()        
+            get_request = p.match(buff.decode('ascii')).group(1).strip()        
         except AttributeError :
-            logging.critical("AttributeError in request header regex. %s" % data )
+            logging.critical("AttributeError in request header regex. %s" % buff )
 
         try :
             dic = self.parse_full_get(get_request)
@@ -82,15 +79,12 @@ class client_thread(threading.Thread) :
 
 
         if host == ""  :
-            host = (re.search(r'Host: (.*)', data).group(1)).split(':')[0]
+            host = (re.search(r'Host: (.*)', buff.decode('ascii')).group(1)).split(':')[0]
 
         # Relay intact headers.
-        headers = data2
-        logging.debug(headers.decode('utf-8'))
-        content = self.get_page(host, port, headers)
-
+        content = self.get_page(host, port, buff)
+        
         self.clientsocket.sendall(content)
-        #logging.info("content len {0} bytes".format(len(content)))
 
         self.clientsocket.close()    
 
@@ -192,7 +186,7 @@ class mysocket :
         
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         #s.setblocking(1)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,1)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,5)
 
         s.bind((HOST, PORT))
         s.listen(5)
