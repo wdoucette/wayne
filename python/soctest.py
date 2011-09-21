@@ -34,29 +34,36 @@ class client_thread(threading.Thread) :
 
 
     def __init__(self, clientsocket) :
+        
+        self._initialized = True
+        self._started = True
         self.clientsocket = clientsocket
         
+        # Manual init.
+        #threading.Thread.__init__(self)        
+        # Multiple inheritance, 'automatic' init
+        super().__init__()
 
     def run(self) :
-        buff = ""
-        buff_len = 4096
-        data2 = bytes()
+        buff_len = 1024
+        buff = bytes()
 
         while True :
-            
+            logging.debug('Waiting to read client request...')           
             data = self.clientsocket.recv(buff_len)
-            data2 += data
-            buff += data.decode('ascii')
+            buff += data
             logging.debug("Client thread read {0} byte chunk. {1} bytes total.".format(len(data), len(buff)) )
             
             if len(data) < buff_len : 
                 break
             
-            
+        if len(buff) == 0 :
+            logging.warning('Client request 0 bytes, closing.')
+            self.clientsocket.close()
+            return
        
-        logging.debug("Client request received. Processing proxy request...")
+        logging.debug("Client request received. Processing proxy request...length: %s" %len(buff))
 
-        data = buff
         #logging.info(buff)
         # regex for requested /page
         #TODO GET | POST | ... ?
@@ -64,10 +71,10 @@ class client_thread(threading.Thread) :
         p = re.compile('GET (.*) HTTP(.*)')
 
         try :
-            get_request = p.match(data).group(1).strip()        
+            get_request = p.match(buff.decode('utf-8')).group(1).strip()        
         except AttributeError :
-            logging.critical("AttributeError in request header regex. %s" % data )
-
+            logging.critical("AttributeError in request header regex. %s" % buff )
+            exit(2)
         try :
             dic = self.parse_full_get(get_request)
 
@@ -82,15 +89,12 @@ class client_thread(threading.Thread) :
 
 
         if host == ""  :
-            host = (re.search(r'Host: (.*)', data).group(1)).split(':')[0]
+            host = (re.search(r'Host: (.*)', buff.decode('ascii')).group(1)).split(':')[0]
 
         # Relay intact headers.
-        headers = data2
-        logging.debug(headers.decode('utf-8'))
-        content = self.get_page(host, port, headers)
-
+        content = self.get_page(host, port, buff)
+        
         self.clientsocket.sendall(content)
-        #logging.info("content len {0} bytes".format(len(content)))
 
         self.clientsocket.close()    
 
@@ -192,20 +196,16 @@ class mysocket :
         
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         #s.setblocking(1)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,1)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         s.bind((HOST, PORT))
         s.listen(5)
 
-
-        
-        #print("Conntectd by: ", address)
         #TODO thread for multiple requests, persist
         #TODO config file
         #DONE TODO opts
         #TODO mangle header
         #DONE log
-
 
         #open in binary write mode, no need to cast byte(ascii)
         f =open("/tmp/get","w+b")
@@ -220,7 +220,8 @@ class mysocket :
             # Spawn new client request.
             logging.debug("Request received. Spawing client processor...")
             ct = client_thread(clientsocket)
-            ct.run()
+            ct.start()
+            #ct.run()
 
             continue
 

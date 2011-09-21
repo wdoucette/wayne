@@ -1,34 +1,43 @@
 #!/usr/bin/python3.2.2
-"""Client for transparent proxy.
+""" Proxy socket client.
 
 """
 
 import socket
+import logging
 
+def fetch(host, port, headers) :
 
-#TODO investigate buff size max -mtu 1388? is there a way to detect?
+    """ Returns fetched response of relayed headers.  
 
-def fetch(host, PORT, headers) :
-
-#	print("HOST: {0}".format(host))
-#	print("PORT: {0}".format(PORT))
-#	print("headers: {0}".format(headers))
-
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((host,int(PORT)))
-    s.sendall(headers)
-
+    """
+    #TODO investigate MTU - seems to require 1388 ... can we auto detect?
+    
     buff = bytes()
+    
+    logging.debug("csock connecting to host: %s port: %s" %(host, port))
+    logging.debug("Sending headers: \n%s\n" %headers)
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try :
+        s.connect((host,int(port)))
+    
+    except Exception as err :
+        logging.critical(err)
+        exit(2)
+
+    s.sendall(headers)
+    
     while True :
-        data = s.recv(1024)
-        #print(data)
-        buff += data#.decode('ascii')
-        if len(data) < 1024 : break	
+        
+        data = s.recv(1388)
+        buff += data
+        
+        if len(data) < 1388 : 
+            break	
 
-
-    #print("Data len: {0} ".format((buff)))
-
-    s.shutdown(socket.SHUT_WR)
+    s.shutdown(socket.SHUT_RDWR)
     s.close()
+
+    logging.debug(buff)
     return buff 
 
