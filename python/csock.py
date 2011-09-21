@@ -14,22 +14,21 @@ def fetch(host, PORT, headers) :
 #	print("PORT: {0}".format(PORT))
 #	print("headers: {0}".format(headers))
 
-	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	s.connect((host,PORT))
-	s.sendall(bytes(headers,'ascii'))
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((host,int(PORT)))
+    s.sendall(headers)
+
+    buff = bytes()
+    while True :
+        data = s.recv(1024)
+        #print(data)
+        buff += data#.decode('ascii')
+        if len(data) < 1024 : break	
 
 
-	buff = bytes()
-	while True :
-		data = s.recv(1388)
-		#print(data)
-		buff += data#.decode('UTF-8')
-		if len(data) < 1388 : break	
-		
-	
-	#print("Data len: {0} ".format((buff)))
-	
-	s.shutdown(socket.SHUT_WR)
-	s.close()
-	return buff 
+    #print("Data len: {0} ".format((buff)))
+
+    s.shutdown(socket.SHUT_WR)
+    s.close()
+    return buff 
 

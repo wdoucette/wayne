@@ -39,19 +39,22 @@ class client_thread(threading.Thread) :
 
     def run(self) :
         buff = ""
-        buff_len = 1388
-
+        buff_len = 4096
+        data2 = bytes()
 
         while True :
+            
             data = self.clientsocket.recv(buff_len)
-            print('data read')
+            data2 += data
             buff += data.decode('ascii')
-            if len(data) < buff_len : break
+            logging.debug("Client thread read {0} byte chunk. {1} bytes total.".format(len(data), len(buff)) )
+            
+            if len(data) < buff_len : 
+                break
             
             
-    #if (len(data) < buff_len) : # Buffer not full, end of stream. #if ( (not data) | (len(data)< buff_len)): 
        
-        print("Request complete. Client SHUT stream. Replying...")
+        logging.debug("Client request received. Processing proxy request...")
 
         data = buff
         #logging.info(buff)
@@ -63,18 +66,14 @@ class client_thread(threading.Thread) :
         try :
             get_request = p.match(data).group(1).strip()        
         except AttributeError :
-            print(re, data)
+            logging.critical("AttributeError in request header regex. %s" % data )
 
         try :
             dic = self.parse_full_get(get_request)
 
         except RuntimeError as err :
-
-            #logging.error(err)
-            #clientsocket.close()
-    #        (clientsocket, address) = s.accept()
+            logging.critical("RuntimeError: %s" % err)
             exit(2) 
-#continue
     
         proto = dic['proto']
         host = dic['host']
@@ -85,24 +84,17 @@ class client_thread(threading.Thread) :
         if host == ""  :
             host = (re.search(r'Host: (.*)', data).group(1)).split(':')[0]
 
-    # relay intact headers
-        headers = buff
-        content = self.get_page(host, 80, headers)
+        # Relay intact headers.
+        headers = data2
+        logging.debug(headers.decode('utf-8'))
+        content = self.get_page(host, port, headers)
 
-        val = self.clientsocket.sendall(content)
-        #print ("sent: %i " % val)
-        logging.info("content len {0} bytes".format(len(content)))
-    #clientsocket.flush()
-    #break
+        self.clientsocket.sendall(content)
+        #logging.info("content len {0} bytes".format(len(content)))
 
-    # Close and reinitialize socket.
-        #clientsocket.shutdown(socket.SHUT_WR)
         self.clientsocket.close()    
 
-    #(clientsocket, address) = s.accept()
-        print("next ")
-        print (self.clientsocket)
-       # , address)
+        logging.debug("Client thread completed.\n")
         
     #@staticmethod
     #@classmethod
@@ -205,13 +197,7 @@ class mysocket :
         s.bind((HOST, PORT))
         s.listen(5)
 
-        print("waiting for request...")
-        #print(clientsocket, address)
 
-        
-       # ct = client_thread(clientsocket)
-       #ct.run()
-        
         
         #print("Conntectd by: ", address)
         #TODO thread for multiple requests, persist
@@ -225,16 +211,19 @@ class mysocket :
         f =open("/tmp/get","w+b")
         
         while True :
-            print('new accept')
-            
+        
             # Server
+            
+            logging.debug("Socket server accepting requests.")
             (clientsocket, address)  = s.accept()
             
             # Spawn new client request.
+            logging.debug("Request received. Spawing client processor...")
             ct = client_thread(clientsocket)
             ct.run()
 
             continue
+
         print(len(content))
         f.write(bytes(data,'ascii'))
 
