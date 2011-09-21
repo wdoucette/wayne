@@ -16,8 +16,8 @@ def fetch(host, PORT, headers) :
 
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	s.connect((host,PORT))
-	s.send(bytes(headers,'ascii'))
-	#s.shutdown(socket.SHUT_WR)
+	s.sendall(bytes(headers,'ascii'))
+
 
 	buff = bytes()
 	while True :
@@ -28,5 +28,8 @@ def fetch(host, PORT, headers) :
 		
 	
 	#print("Data len: {0} ".format((buff)))
+	
+	s.shutdown(socket.SHUT_WR)
+	s.close()
 	return buff 
 
