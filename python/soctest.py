@@ -17,13 +17,15 @@ import threading
 class client_thread(threading.Thread) :
 
     # Spawn for each client request.
-  
+    
+    count = 0
     def __init__(self, clientsocket) :
         
         self._initialized = True
         self._started = True
         self.clientsocket = clientsocket
-        
+        client_thread.count += 1
+        logging.debug("Initializing thread. Current count: %i" %client_thread.count)
         # Manual init.
         #threading.Thread.__init__(self)        
         # Multiple inheritance, 'automatic' init
@@ -40,7 +42,7 @@ class client_thread(threading.Thread) :
             logging.debug("Client thread read {0} byte chunk. {1} bytes total.".format(len(data), len(buff)) )
 
 
-            if len(data) < buff_len : 
+            if len(data) < buff_len :#& len(buff) > 0 : 
                 break
             
         if len(buff) == 0 :
@@ -52,7 +54,9 @@ class client_thread(threading.Thread) :
        
         logging.debug("Client request received. Processing proxy request...length: %s\n%s" %( len(buff), buff))
 
-        logging.debug("\n\nRaw client request buffer:\n%s" %buff.decode('utf-8'))
+        # TODO we can arbitarily apply a codec here. Only header can be assumed ascii
+        # the body (POST/PUT) etc must be stripped - delimited by \r\n\r\n
+        #logging.debug("\n\nRaw client request buffer:\n%s" %buff.decode('utf-8'))
         
         #TODO GET | POST | ... ?
         #TODO implement header test cases.
@@ -61,11 +65,13 @@ class client_thread(threading.Thread) :
         
         get_page(dic['host'], dic['port'], dic['proxy_header'], self.clientsocket)
         #self.clientsocket.sendall(bytes(content))
+        logging.debug("Returned from client proxy, shutting down client socket thread")
         self.clientsocket.shutdown(socket.SHUT_RDWR)
         self.clientsocket.close()    
 
         logging.debug("Client thread completed.\n")
-       
+        client_thread.count -= 1
+
 
 def parse_request_header(buff) :
         """ Extracts host, port, content length, content. 
@@ -122,8 +128,8 @@ project/
         p = re.compile('([A-Z]*)[ ](.*) HTTP(.*)')
         
         try :
-            
-            action = p.match(buff.decode('utf-8')).group(1)
+             pass
+             action = p.match(buff.decode('utf-8')).group(1)
        
         except AttributeError as err :
             
@@ -131,6 +137,7 @@ project/
 
         # Parse request. 
         try :
+            
             request = p.match(buff.decode('utf-8')).group(2).strip()        
         except AttributeError as err :
             logging.critical("AttributeError in REQUEST header regex. %s\n%s" % (err, buff) )
@@ -157,7 +164,7 @@ project/
         #    host = (re.search(r'Host: (.*)', buff.decode('ascii')).group(1)).split(':')[0]
         logging.debug(dic['host'])
         logging.debug("\n\nProxied Request Header:")
-        logging.debug(proxy_headers.decode('utf-8'))
+        #logging.debug(dic['proxy_header'].decode('utf-8'))
         return dic
 
 #@staticmethod
@@ -277,7 +284,7 @@ class mysocket :
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         s.bind((HOST, PORT))
-        s.listen(10)
+        s.listen(5)
 
         #TODO thread for multiple requests, persist
         #TODO config file
