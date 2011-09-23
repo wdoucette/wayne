@@ -6,7 +6,8 @@
 import socket
 import logging
 
-def fetch(host, port, headers) :
+def fetch(host, port, headers, client_socket) :
+
 
     """ Returns fetched response of relayed headers.  
 
@@ -16,28 +17,39 @@ def fetch(host, port, headers) :
     buff = bytes()
     
     logging.debug("csock connecting to host: %s port: %s" %(host, port))
-    logging.debug("Sending headers: \n%s\n" %headers)
+    #logging.debug("Sending headers: \n%s\n" %headers)
+    #logging.debug("host\n %s" %host) 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try :
         s.connect((host,int(port)))
     
     except Exception as err :
-        logging.critical(err)
-        exit(2)
-
-    s.sendall(headers)
+        logging.critical("Bad address/DNS for host: %s port: %s\n%s" % (host, port, err))
+        s.close()
+        return buff
     
+    try :
+        s.sendall(headers)
+    except Exception as err :
+        #print(err)
+        logging.critical(err)
+        s.close()
+        return buff
+
+
     while True :
         
         data = s.recv(1388)
         buff += data
+
+        client_socket.sendall(data)        
         
         if len(data) < 1388 : 
             break	
 
-    s.shutdown(socket.SHUT_RDWR)
+    #s.shutdown(socket.SHUT_RDWR)
     s.close()
 
-    logging.debug(buff)
+    #logging.debug("Response received:\n%s" % buff)
     return buff 
 
