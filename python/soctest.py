@@ -23,32 +23,39 @@ class client_thread(threading.Thread) :
         
         self._initialized = True
         self._started = True
+
         self.clientsocket = clientsocket
         client_thread.count += 1
+        
         logging.debug("Initializing thread. Current count: %i" %client_thread.count)
+
         # Manual init.
-        #threading.Thread.__init__(self)        
+        # threading.Thread.__init__(self)        
         # Multiple inheritance, 'automatic' init
         super().__init__()
 
     def run(self) :
-        buff_len = 1388
+        
+        buff_len = 4096
         buff = bytes()
 
         while True :
+        
             logging.debug('Waiting to read client request...')           
+            
             data = self.clientsocket.recv(buff_len)
             buff += data
+            
             logging.debug("Client thread read {0} byte chunk. {1} bytes total.".format(len(data), len(buff)) )
 
 
-            if len(data) < buff_len :#& len(buff) > 0 : 
+            if len(data) < buff_len : 
                 break
             
         if len(buff) == 0 :
 
             # Client abondoned socket.
-            logging.warning('Client request 0 bytes, closing.')
+            logging.warning('Client request 0 bytes, closing socket.')
             self.clientsocket.close()
             return
        
@@ -62,10 +69,10 @@ class client_thread(threading.Thread) :
         #TODO implement header test cases.
        
         dic = parse_request_header(buff)
-        
         get_page(dic['host'], dic['port'], dic['proxy_header'], self.clientsocket)
-        #self.clientsocket.sendall(bytes(content))
+        
         logging.debug("Returned from client proxy, shutting down client socket thread")
+        
         self.clientsocket.shutdown(socket.SHUT_RDWR)
         self.clientsocket.close()    
 
@@ -123,13 +130,23 @@ project/
 
 """     
 
+        # TODO Separate request body from headers -e.g., PUT
+#        logging.debug("content start: %i" %buff.find(r"\n\n")) 
+
+        # Safe way to separate unknown content body encoding from known ascii header
+        # Can be used for processing response header also.
+        body = buff[buff.find(b'\r\n\r\n')+2:]
+        header = buff[:buff.find(b'\r\n\r\n')]
+        
+
+        #logging.debug("Request Header: %s" % header.decode())
+        #logging.debug("Request Body: %s" % body.decode())
         
         # Parse HTTP action.
         p = re.compile('([A-Z]*)[ ](.*) HTTP(.*)')
         
         try :
-             pass
-             action = p.match(buff.decode('utf-8')).group(1)
+             action = p.match(buff.decode()).group(1)
        
         except AttributeError as err :
             
@@ -138,7 +155,7 @@ project/
         # Parse request. 
         try :
             
-            request = p.match(buff.decode('utf-8')).group(2).strip()        
+            request = p.match(buff.decode()).group(2).strip()        
         except AttributeError as err :
             logging.critical("AttributeError in REQUEST header regex. %s\n%s" % (err, buff) )
             exit(2)
@@ -155,8 +172,8 @@ project/
         # Rebuild first header line.
         regex = re.compile('[^\\n]*\\n(.*)', re.MULTILINE | re.DOTALL)
         
-        proxy_headers = regex.search(buff.decode('utf-8')).group(1)
-        proxy_headers = bytes(dic['action'] +" " + dic['path'] +" " + "HTTP/1.1\r\n" + proxy_headers,'utf-8')
+        proxy_headers = regex.search(buff.decode()).group(1)
+        proxy_headers = bytes(dic['action'] +" " + dic['path'] +" " + "HTTP/1.1\r\n" + proxy_headers,'ascii')
 
 
         dic['proxy_header'] = proxy_headers
@@ -212,15 +229,10 @@ def parse_full_get(request) :
         # Get request is relative to host/ , -not a proxied request.
         raise RuntimeError('Direct requests not allowed. Requested path was: %s' % request[1:])
 
-    proto = request.split('://')[0]
+    proto = request[:request.find('://')]
 
-    # TODO BUG
-    #
-    #
-    #
-    ######### This is broken
     try :
-        request = request.split('://')[1]
+        request = request[len(proto)+3:]
 
     except IndexError :
 

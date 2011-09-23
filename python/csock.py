@@ -17,7 +17,7 @@ def fetch(host, port, headers, client_socket) :
     buff = bytes()
     
     logging.debug("csock connecting to host: %s port: %s" %(host, port))
-    #logging.debug("Sending headers: \n%s\n" %headers)
+    logging.debug("Sending headers: \n%s\n" % headers.decode())
     #logging.debug("host\n %s" %host) 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     
