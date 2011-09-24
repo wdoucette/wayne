@@ -14,21 +14,26 @@ import logging
 import threading
 
 
-class client_thread(threading.Thread) :
+class ClientThread(threading.Thread) :
 
     # Spawn for each client request.
     import csock
 
-    count = 0
+    __count = 0
+    
+    @property
+    def count(self) :
+        return ClientThread.__count
+
     def __init__(self, clientsocket) :
         
         self._initialized = True
         self._started = True
 
         self.clientsocket = clientsocket
-        client_thread.count += 1
+        ClientThread.__count += 1
         
-        logging.debug("Initializing thread. Current count: %i" %client_thread.count)
+        logging.debug("Initializing thread. Current count: %i" %ClientThread.__count )
 
         # Manual init.
         # threading.Thread.__init__(self)        
@@ -39,49 +44,49 @@ class client_thread(threading.Thread) :
         
         buff_len = 4096
         buff = bytes()
-
-        logging.debug('Waiting to read client request...')           
+        # TODO log client address
+        logging.debug('Reading client request. ')           
         
         while True :
             
             data = self.clientsocket.recv(buff_len)
             buff += data
             
-            logging.debug("Client thread read {0} byte chunk. {1} bytes total.".format(len(data), len(buff)) )
+            logging.debug("Client thread read {0} byte chunk of {1} bytes so far.".format(len(data), len(buff)) )
 
-
+            # Receive buff not full, client is finsihed sending.
             if len(data) < buff_len : 
                 break
             
         if len(buff) == 0 :
 
             # Client abondoned socket.
-            logging.warning('Client request 0 bytes, closing socket.')
+            logging.warning('Received 0 total bytes from proxy client, closing socket.')
             self.clientsocket.close()
+            ClientThread.__count -= 1
             return
        
-        logging.debug("Client request received. Processing proxy request...length: %s\n%s" %( len(buff), buff))
+        logging.debug("Finished receiving client request %s bytes\n%s" %( len(buff), buff))
 
-        # TODO we can arbitarily apply a codec here. Only header can be assumed ascii
+        # TODO we can't arbitarily apply a codec here. Only header can be assumed ascii
         # the body (POST/PUT) etc must be stripped - delimited by \r\n\r\n
         #logging.debug("\n\nRaw client request buffer:\n%s" %buff.decode('utf-8'))
         
         #TODO GET | POST | ... ?
         #TODO implement header test cases.
-        f = open("/tmp/buff", "a")
-        f.write(buff.decode('utf-8'))
         dic = parse_http_headers(buff)
         
         self.csock.fetch(dic['host'], dic['port'], dic['proxy_header'], self.clientsocket)
         
-        logging.debug("Returned from client proxy, shutting down client socket thread")
-        
-        self.clientsocket.shutdown(socket.SHUT_RDWR)
-        self.clientsocket.close()    
+        try : self.clientsocket.shutdown(socket.SHUT_RDWR)
 
-        logging.debug("Client thread completed.\n")
-        client_thread.count -= 1
+        except Exception as err : logging.debug(err)
         
+        self.clientsocket.close()    
+        logging.info("Client request completed, connection closed.")
+        ClientThread.__count -= 1
+        logging.debug("ClientThread.count: %i" %ClientThread.__count)
+        return
 
 def parse_http_headers(buff) :
         """ Extracts host, port, content length, content. 
@@ -120,7 +125,7 @@ b'form_user=wdoucette&form_pass=123456&LOGIN_BUTTON=LOGIN'
 
 
 # Mangled header: No address for hostname.
-#>>> s = mysocket() 
+#>>> s = ProxyServer() 
 #>>> dic = None
 #>>> buff = b'GET http://statcounter.comhttp//statcounter.com/project/?account_id=1748325&login_id=1&code=641e2527035d03cc200debd3b2fdb9db& HTTP/1.1\\r\\nHost: statcounter.comhttp\\r\\nProxy-Connection: keep-alive\\r\\nReferer: http://statcounter.com/\\r\\nCache-Control: max-age=0\\r\\nUser-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/10.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30\\r\\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\\r\\nAccept-Encoding: gzip,deflate,sdch\\r\\nAccept-Language: en-US,en;q=0.8\\r\\nAccept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3\\r\\n\\r\\n'
 #>>> dic = parse_http_headers(buff)
@@ -188,7 +193,7 @@ def enum_http_request(raw_request_header) :
     """Returns dictionary with protocol, host, port and uri of HTTP request.
 # Example test cases:
     
-    #>>> self = client_thread
+    #>>> self = ClientThread
     #>>> print(enum_http_request("https://domain.com/"))
     {'path': '', 'host': 'domain.com', 'port': '443', 'proto': 'https'}
     
@@ -260,7 +265,7 @@ def enum_http_request(raw_request_header) :
     return dic
 
     
-class mysocket :
+class ProxyServer :
     
     def __init__(self) :
         """Initialize and configure program logging etc.
@@ -290,20 +295,18 @@ class mysocket :
         
         while True :
         
-            # Server
+            # Proxy Server
             
             logging.debug("Socket server accepting requests.")
             (clientsocket, address)  = s.accept()
             
-            # Spawn new client request.
-            logging.debug("Request received. Spawing client thread...")
-            ct = client_thread(clientsocket)
-            ct.start()
-            
-            continue
+            # Spawn new thread to process client request.
+            #TODO log client address
 
-        print(len(content))
-        f.write(bytes(data,'ascii'))
+            ct = ClientThread(clientsocket)
+            logging.debug("Request received. Spawning client thread...ct count: %i" % ct.count)
+            ct.start()
+            continue
 
     
     #@staticmethod
@@ -364,5 +367,5 @@ class mysocket :
             logging.info("Set log level to %s and log file to %s" % (log_level, logfile_name))
 
         
-mysock = mysocket() 
+proxy = ProxyServer() 
 
