@@ -39,9 +39,9 @@ class client_thread(threading.Thread) :
         buff_len = 4096
         buff = bytes()
 
-        while True :
+        logging.debug('Waiting to read client request...')           
         
-            logging.debug('Waiting to read client request...')           
+        while True :
             
             data = self.clientsocket.recv(buff_len)
             buff += data
@@ -67,7 +67,8 @@ class client_thread(threading.Thread) :
         
         #TODO GET | POST | ... ?
         #TODO implement header test cases.
-       
+        f = open("/tmp/buff", "a")
+        f.write(buff.decode('utf-8'))
         dic = parse_request_header(buff)
         get_page(dic['host'], dic['port'], dic['proxy_header'], self.clientsocket)
         
@@ -78,50 +79,46 @@ class client_thread(threading.Thread) :
 
         logging.debug("Client thread completed.\n")
         client_thread.count -= 1
-
+        
 
 def parse_request_header(buff) :
         """ Extracts host, port, content length, content. 
 
 
-# GET action
-#>>> buff = b"GET http://api.thetrafficstat.net/related?s=750&md=21&pid=473680971423164000&sess=773492173524573400&q=http%3A%2F%2Fdocs.python.org%2Flibrary%2Ffunctions.html&prev=http%3A%2F%2Fdocs.python.org%2Flibrary%2Fconstants.html&link=1&hreferer=http%3A%2F%2Fdocs.python.org%2Flibrary%2Fconstants.html HTTP/1.1\\r\\nHost: api.thetrafficstat.net\\r\\nProxy-Connection: keep-alive\\r\\nX-Requested-With: XMLHttpRequest\\r\\nUser-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/10.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30\\r\\nAccept: application/json, text/javascript, */*; q=0.01\\r\\nAccept-Encoding: gzip,deflate,sdch\\r\\nAccept-Language: en-US,en;q=0.8\\r\\nAccept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3\\r\\nCookie: pid2=70727a560d5f1081; ASP.NET_SessionId=aenf3u45qt5efk55rqipg345\\r\\n\\r\\n"
-# >>> dic = parse_request_header(buff)
-#>>> print(dic['host'])
-#api.thetrafficstat.net
-#>>> print(dic['action'])
-GET
-#>>> print(dic['path'])
-/related?s=750&md=21&pid=473680971423164000&sess=773492173524573400&q=http%3A%2F%2Fdocs.python.org%2Flibrary%2Ffunctions.html&prev=http%3A%2F%2Fdocs.python.org%2Flibrary%2Fconstants.html&link=1&hreferer=http%3A%2F%2Fdocs.python.org%2Flibrary%2Fconstants.html
-#>>> print(dic['new_header'])
-b"GET /related?s=750&md=21&pid=473680971423164000&sess=773492173524573400&q=http%3A%2F%2Fdocs.python.org%2Flibrary%2Ffunctions.html&prev=http%3A%2F%2Fdocs.python.org%2Flibrary%2Fconstants.html&link=1&hreferer=http%3A%2F%2Fdocs.python.org%2Flibrary%2Fconstants.html HTTP/1.1\\r\\nHost: api.thetrafficstat.net\\r\\nProxy-Connection: keep-alive\\r\\nX-Requested-With: XMLHttpRequest\\r\\nUser-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/10.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30\\r\\nAccept: application/json, text/javascript, */*; q=0.01\\r\\nAccept-Encoding: gzip,deflate,sdch\\r\\nAccept-Language: en-US,en;q=0.8\\r\\nAccept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3\\r\\nCookie: pid2=70727a560d5f1081; ASP.NET_SessionId=aenf3u45qt5efk55rqipg345\\r\\n\\r\\n"
-
-
-
-
-
-# POST action
-# b"POST ... \\r\\n" dosen't work
->>> buff = R"POST http://statcounter.com/project/ HTTP/1.1\\r\\nHost: statcounter.com\\r\\nProxy-Connection: keep-alive\\r\\nReferer: http://statcounter.com/\\r\\nContent-Length: 56\\r\\nCache-Control: max-age=0\\r\\nOrigin: http://statcounter.com\\r\\nUser-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/10.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30\\r\\nContent-Type: application/x-www-form-urlencoded\\r\\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\\r\\nAccept-Encoding: gzip,deflate,sdch\\r\\nAccept-Language: en-US,en;q=0.8\\r\\nAccept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3\\r\\nCookie: landing=http%3A//statcounter.com/|||; login=wdoucette%26cae836e112dda0dc72402dfdd638947f; is_unique_1=sc5473791.1316073483.2; is_unique=sc3566826.1316073489.2-1417324.1315759362.1-1417516.1315759348.0-204609.1316644289.5\\r\\n\\r\\nform_user=wdoucette&form_pass=p374678&LOGIN_BUTTON=LOGIN"
-
->>> buff = bytes(buff, 'utf=8')
-
->>> dic = None
->>> print("Buffer len from docstr: %s" %len(buff))
+# GET request
+>>> buff = b"GET http://api.thetrafficstat.net/related?s=750&md=21&pid=473680971423164000&sess=773492173524573400&q=http%3A%2F%2Fdocs.python.org%2Flibrary%2Ffunctions.html&prev=http%3A%2F%2Fdocs.python.org%2Flibrary%2Fconstants.html&link=1&hreferer=http%3A%2F%2Fdocs.python.org%2Flibrary%2Fconstants.html HTTP/1.1\\r\\nHost: api.thetrafficstat.net\\r\\nProxy-Connection: keep-alive\\r\\nX-Requested-With: XMLHttpRequest\\r\\nUser-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/10.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30\\r\\nAccept: application/json, text/javascript, */*; q=0.01\\r\\nAccept-Encoding: gzip,deflate,sdch\\r\\nAccept-Language: en-US,en;q=0.8\\r\\nAccept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3\\r\\nCookie: pid2=70727a560d5f1081; ASP.NET_SessionId=aenf3u45qt5efk55rqipg345\\r\\n\\r\\n"
 >>> dic = parse_request_header(buff)
+>>> print(dic['host'])
+api.thetrafficstat.net
+>>> print(dic['action'])
+GET
+>>> print(dic['path'])
+/related?s=750&md=21&pid=473680971423164000&sess=773492173524573400&q=http%3A%2F%2Fdocs.python.org%2Flibrary%2Ffunctions.html&prev=http%3A%2F%2Fdocs.python.org%2Flibrary%2Fconstants.html&link=1&hreferer=http%3A%2F%2Fdocs.python.org%2Flibrary%2Fconstants.html
 
-#>>> print(dic['host'])
+# POST request - writes parsed header in raw binary format
+>>> buff = b"POST http://statcounter.com/project/ HTTP/1.1\\r\\nHost: statcounter.com\\r\\nProxy-Connection: keep-alive\\r\\nReferer: http://statcounter.com/\\r\\nContent-Length: 56\\r\\nCache-Control: max-age=0\\r\\nOrigin: http://statcounter.com\\r\\nUser-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/10.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30\\r\\nContent-Type: application/x-www-form-urlencoded\\r\\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\\r\\nAccept-Encoding: gzip,deflate,sdch\\r\\nAccept-Language: en-US,en;q=0.8\\r\\nAccept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3\\r\\nCookie: landing=http%3A//statcounter.com/|||; login=wdoucette%26cae836e112dda0dc72402dfdd638947f; is_unique_1=sc5473791.1316073483.2; is_unique=sc3566826.1316073489.2-1417324.1315759362.1-1417516.1315759348.0-204609.1316644289.5\\r\\n\\r\\nform_user=wdoucette&form_pass=123456&LOGIN_BUTTON=LOGIN"
+
+>>> buff = bytes(buff)
+>>> dic = None
+>>> dic = parse_request_header(buff)
+>>> print(dic['host'])
 statcounter.com
-#>>> print(dic['action'])
+>>> print(dic['action'])
 POST
-#>>> print(dic['path'])
-project/
-
-
-# Test for mangling request
+>>> print(dic['path'])
+/project/
+>>> f =open("/tmp/out" , "w+b")
+>>> f.write(dic['header'])
+830
+>>> f.close()
+>>> print(dic['header'].decode())
+POST http://statcounter.com/project/ HTTP/1.1\r\nHost: statcounter.com\r\nProxy-Connection: keep-alive\r\nReferer: http://statcounter.com/\r\nContent-Length: 56\r\nCache-Control: max-age=0\r\nOrigin: http://statcounter.com\r\nUser-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/10.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\nAccept-Encoding: gzip,deflate,sdch\r\nAccept-Language: en-US,en;q=0.8\r\nAccept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3\r\nCookie: landing=http%3A//statcounter.com/|||; login=wdoucette%26cae836e112dda0dc72402dfdd638947f; is_unique_1=sc5473791.1316073483.2; is_unique=sc3566826.1316073489.2-1417324.1315759362.1-1417516.1315759348.0-204609.1316644289.5
+>>> print(dic['body'])
+b'form_user=wdoucette&form_pass=123456&LOGIN_BUTTON=LOGIN'
 
 
 # Mangled header: No address for hostname.
+#>>> s = mysocket() 
 #>>> dic = None
 #>>> buff = b'GET http://statcounter.comhttp//statcounter.com/project/?account_id=1748325&login_id=1&code=641e2527035d03cc200debd3b2fdb9db& HTTP/1.1\\r\\nHost: statcounter.comhttp\\r\\nProxy-Connection: keep-alive\\r\\nReferer: http://statcounter.com/\\r\\nCache-Control: max-age=0\\r\\nUser-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/10.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30\\r\\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\\r\\nAccept-Encoding: gzip,deflate,sdch\\r\\nAccept-Language: en-US,en;q=0.8\\r\\nAccept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3\\r\\n\\r\\n'
 #>>> dic = parse_request_header(buff)
@@ -135,7 +132,7 @@ project/
 
         # Safe way to separate unknown content body encoding from known ascii header
         # Can be used for processing response header also.
-        body = buff[buff.find(b'\r\n\r\n')+2:]
+        body = buff[buff.find(b'\r\n\r\n')+4:]
         header = buff[:buff.find(b'\r\n\r\n')]
         
 
@@ -176,7 +173,10 @@ project/
         proxy_headers = bytes(dic['action'] +" " + dic['path'] +" " + "HTTP/1.1\r\n" + proxy_headers,'ascii')
 
 
+
         dic['proxy_header'] = proxy_headers
+        dic['body'] = body
+        dic['header'] = header
 
         #    host = (re.search(r'Host: (.*)', buff.decode('ascii')).group(1)).split(':')[0]
         logging.debug(dic['host'])
@@ -286,7 +286,7 @@ class mysocket :
         self.initLog()
         doctest.testmod()
         
-        
+        # TODO paramaterize server HOST/PORT        
         # Establish proxy server on localhost:8081
         HOST = 'localhost' # None, '' ... Symbolic meaning all available interfaces
         PORT = 8081
@@ -298,9 +298,7 @@ class mysocket :
         s.bind((HOST, PORT))
         s.listen(5)
 
-        #TODO thread for multiple requests, persist
         #TODO config file
-        #TODO mangle header
 
         #open in binary write mode, no need to cast byte(ascii)
         f =open("/tmp/get","w+b")
