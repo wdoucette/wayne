@@ -86,6 +86,7 @@ class ClientThread(threading.Thread) :
         logging.info("Client request completed, connection closed.")
         ClientThread.__count -= 1
         logging.debug("ClientThread.count: %i" %ClientThread.__count)
+
         return
 
 def parse_http_headers(buff) :
@@ -303,9 +304,11 @@ class ProxyServer :
             # Spawn new thread to process client request.
             #TODO log client address
 
+            logging.debug("Thread count %s" % threading.active_count())
             ct = ClientThread(clientsocket)
             logging.debug("Request received. Spawning client thread...ct count: %i" % ct.count)
             ct.start()
+            
             continue
 
     
