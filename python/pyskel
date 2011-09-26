@@ -15,7 +15,9 @@ Usage:
 my.py <filename.py>""")
     exit(2)
 
-
+def main() :
+    print('im here')
+    exit(2)
 if len(sys.argv) <2 : usage()
 
 filename =sys.argv[1]
