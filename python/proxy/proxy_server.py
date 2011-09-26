@@ -1,4 +1,4 @@
-#!/usr/bin/python3.2.2
+#!/usr/bin/env python3.2
 
 """ipv4 python proxy server.
 
@@ -150,14 +150,18 @@ class ProxyServices() :
            
             try : 
                 # Receive a chunk of data from remote host.
-                data = s.recv(4096)
+                data = s.recv(2048)
            
                 try : 
                     # Some servers will not close (send 0 bytes) while write is open.
                     # Others will not send any data if write is shutdown before a read.
-                    # So we read first, then shutdown writing from our end.
-                    s.shutdown(socket.SHUT_WR)
-                
+                    # ... seems to require timeout instead ...
+
+                    if len(data) < 2048 : 
+                        s.settimeout(5)
+                        #shutdown(socket.SHUT_WR)
+                        pass
+
                 except Exception : pass
             
             except Exception as err :
@@ -165,26 +169,23 @@ class ProxyServices() :
                 logging.warn("Problem reading from remote host socket. Closing:.\n%s" %err)
                 return -1
 
-            if len(data) == 0 : 
-                
-                logging.info("Remote host finished sending.")
-                s.close()
-                return -1	
-        
-            # Send this data chunk to client.
-            try : client_socket.sendall(data)        
-            
-            except Exception as err :
-            
-                logging.warn(err)
-            
-        # Repeat while loop until s.recv() returns 0 bytes.
+           # Send this data chunk to client.
+            if len(data) : 
 
+                try : 
+                
+                    client_socket.sendall(data)        
+
+                except Exception as err :
+            
+                    logging.warn(err)
+            
+            # Repeat while loop until s.recv() returns 0 bytes.
         
-        logging.info("Closing proxy connection to remote.")
-        
+        s.shutdown(socket.SHUT_RDWR)
+        logging.info("Remote host finished sending.")
         s.close()
-        return 0
+        return 0	
 
     @staticmethod 
     def enum_http_request(raw_request_header) :
@@ -430,7 +431,7 @@ class ProxyServer() :
         
         # TODO paramaterize server HOST/PORT        
         # Establish proxy server on localhost:8081
-        HOST = 'localhost' # None, '' ... Symbolic meaning all available interfaces
+        HOST = '' # None, '' ... Symbolic meaning all available interfaces
         PORT = 8081
         
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
