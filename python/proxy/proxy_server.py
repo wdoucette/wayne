@@ -14,12 +14,15 @@ import logging
 import threading
 
 
-def main() :
-    
+def main(argv = None) :
+
     """Initialize proxy server and configure program logging etc.
 
     """
-            
+    
+    if argv is None :
+        argv = sys.argv
+           
     # Log has to be setup before doctest starts logging stuff.
     initLog()
     doctest.testmod()
@@ -29,7 +32,7 @@ def main() :
     p=ProxyServer() 
 
 def initLog():
-    
+   
     def usage() :
 
         print("""Usage:
@@ -101,22 +104,25 @@ class ProxyServices() :
 
 
     def enum(**enums):
-        """ (**enums) notation expects f(var1=val1, var2=val2, ... ) 
-            (*args) notation expects f(val1, val2, ... )
-         #      >>> class X:
-         #      ...     a = 1
-         #      
-         #      >>> X = type('X', (object,), dict(a=1))  
+   
+        """ 
+        (**enums) notation expects f(var1=val1, var2=val2, ... ) 
+        
+        (*args) notation expects f(val1, val2, ... )
+        
+        #      >>> class X:
+        #      ...     a = 1
+        #      
+        #      >>> X = type('X', (object,), dict(a=1))  
 
         """
         
-        return type('Enum', (str,), enums) #type(name, bases, dict   )
-    
+        #type(name, bases, dict)
+        return type('Enum', (str,), enums) 
     
 
     @staticmethod
     def fetch(host, port, headers, client_socket) :
-
 
         """ Returns response to proxy request.  
 
@@ -128,7 +134,8 @@ class ProxyServices() :
         logging.info("Sending request: \n%s\n" % headers.decode())
         
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        
+        #s.settimeout(15)
+
         try : s.connect((host, int(port)))
         
         except Exception as err :
@@ -151,23 +158,17 @@ class ProxyServices() :
             try : 
                 # Receive a chunk of data from remote host.
                 data = s.recv(2048)
-           
-                try : 
-                    # Some servers will not close (send 0 bytes) while write is open.
-                    # Others will not send any data if write is shutdown before a read.
-                    # ... seems to require timeout instead ...
+                #s.shutdown(socket.SHUT_WR)
 
-                    if len(data) < 2048 : 
-                        s.settimeout(5)
-                        #shutdown(socket.SHUT_WR)
-                        pass
-
-                except Exception : pass
+                if len(data) == 0 :
+                    break
             
+                s.settimeout(1)
+           
             except Exception as err :
         
                 logging.warn("Problem reading from remote host socket. Closing:.\n%s" %err)
-                return -1
+                break
 
            # Send this data chunk to client.
             if len(data) : 
@@ -179,10 +180,10 @@ class ProxyServices() :
                 except Exception as err :
             
                     logging.warn(err)
-            
-            # Repeat while loop until s.recv() returns 0 bytes.
+                    break 
+       
+        # Repeat while loop until s.recv() returns 0 bytes or on error.
         
-        s.shutdown(socket.SHUT_RDWR)
         logging.info("Remote host finished sending.")
         s.close()
         return 0	
@@ -193,18 +194,16 @@ class ProxyServices() :
         """Returns dictionary with protocol, host, port and uri of HTTP request.
     # Example test cases:
         
-        #>>> self = ClientThread
-        #>>> print(enum_http_request("https://domain.com/"))
-        {'path': '', 'host': 'domain.com', 'port': '443', 'proto': 'https'}
+        >>> print(ProxyServices.enum_http_request("https://domain.com/"))
+        {'path': '/', 'host': 'domain.com', 'port': '443', 'proto': 'https'}
         
-        #>>> print(self.enum_http_request(self, "http://mydomain.com:8081/path/to/file"))
-        {'path': 'path/to/file', 'host': 'mydomain.com', 'port': '8081', 'proto': 'http'}
-
-        #>>> print(self.enum_http_request(self, "127.0.0.1:8081/"))
-        {'path': '', 'host': '127.0.0.1', 'port': '8081', 'proto': 'http'}
-
-        #>>> print(self.enum_http_request(self, "/direct/request/relative/path"))
-        Traceback (most recent call last):
+        >>> print(ProxyServices.enum_http_request("http://www.mydomain.com:8081/path/to/file"))
+        {'path': '/path/to/file', 'host': 'www.mydomain.com', 'port': '8081', 'proto': 'http'}
+        
+        # This assumes not in transparent mode.
+        #>>> ProxyServer()
+        #>>> print(ProxyServices.enum_http_request("http://localhost:8081/direct/request/relative/path"))
+        #Traceback (most recent call last):
         RuntimeError: Direct requests not allowed. Requested path was: direct/request/relative/path
         
     """
@@ -257,6 +256,7 @@ class ProxyServices() :
     
     def parse_http_headers(buff):
         """ Extracts host, port, content length, content.
+
 # GET request
 >>> buff = b"GET http://api.thetrafficstat.net/related?s=750&md=21&pid=473680971423164000&sess=773492173524573400&q=http%3A%2F%2Fdocs.python.org%2Flibrary%2Ffunctions.html&prev=http%3A%2F%2Fdocs.python.org%2Flibrary%2Fconstants.html&link=1&hreferer=http%3A%2F%2Fdocs.python.org%2Flibrary%2Fconstants.html HTTP/1.1\\r\\nHost: api.thetrafficstat.net\\r\\nProxy-Connection: keep-alive\\r\\nX-Requested-With: XMLHttpRequest\\r\\nUser-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/10.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30\\r\\nAccept: application/json, text/javascript, */*; q=0.01\\r\\nAccept-Encoding: gzip,deflate,sdch\\r\\nAccept-Language: en-US,en;q=0.8\\r\\nAccept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3\\r\\nCookie: pid2=70727a560d5f1081; ASP.NET_SessionId=aenf3u45qt5efk55rqipg345\\r\\n\\r\\n"
 >>> dic = ProxyServices.parse_http_headers(buff)
@@ -297,7 +297,6 @@ b'form_user=wdoucette&form_pass=123456&LOGIN_BUTTON=LOGIN'
 [Errno -5] No address associated with hostname
 
 """     
-
         # TODO Separate request body from headers -e.g., PUT
         #        logging.debug("content start: %i" %buff.find(r"\n\n")) 
 
@@ -306,14 +305,11 @@ b'form_user=wdoucette&form_pass=123456&LOGIN_BUTTON=LOGIN'
         body = buff[buff.find(b'\r\n\r\n')+4:]
         header = buff[:buff.find(b'\r\n\r\n')]
         
-        #logging.debug("Request Header: %s" % header.decode())
-        #logging.debug("Request Body: %s" % body.decode())
-        
         # Parse HTTP action.
         p = re.compile('([A-Z]*)[ ](.*) HTTP(.*)')
-        
+
         try :
-             action = p.match(buff.decode()).group(1)
+             action = p.match(header.decode()).group(1)
        
         except AttributeError as err :
             
@@ -323,7 +319,7 @@ b'form_user=wdoucette&form_pass=123456&LOGIN_BUTTON=LOGIN'
         try :
 
             # Extract request header from raw HTTP headers.
-            raw_request_header = p.match(buff.decode()).group(2).strip()        
+            raw_request_header = p.match(header.decode()).group(2).strip()        
         except AttributeError as err :
             logging.critical("AttributeError in REQUEST header regex. %s\n%s" % (err, buff) )
             exit(2)
@@ -337,7 +333,12 @@ b'form_user=wdoucette&form_pass=123456&LOGIN_BUTTON=LOGIN'
             exit(2) 
     
         request['action'] = action
-        
+       
+
+        #TODO Unclear how we are sending request body, e.g., POST.
+        # Confirm separation of headers / body.
+        # Fails on long POST sometimes.
+
         # Rebuild request - first line in header.
         regex = re.compile('[^\\n]*\\n(.*)', re.MULTILINE | re.DOTALL)
         
@@ -353,8 +354,10 @@ b'form_user=wdoucette&form_pass=123456&LOGIN_BUTTON=LOGIN'
 
 class ClientThread(threading.Thread) :
 
-    # Spawn for each client request.
-
+    """Spawned to process each client request.
+    """
+    # TODO threads sometimes get lost -need to ensure they timeout and die.
+    
     __count = 0
     
     @property
@@ -412,9 +415,11 @@ class ClientThread(threading.Thread) :
          
         ProxyServices.fetch(dic['host'], dic['port'], dic['proxy_header'], self.clientsocket)
         
-        try : self.clientsocket.shutdown(socket.SHUT_RDWR)
+        try : 
+            self.clientsocket.shutdown(socket.SHUT_RDWR)
 
-        except Exception as err : logging.debug(err)
+        except Exception as err : 
+            logging.debug(err)
         
         self.clientsocket.close()    
         logging.info("Client request completed, connection closed.")
@@ -425,7 +430,6 @@ class ClientThread(threading.Thread) :
 
 
 class ProxyServer() :
-    
 
     def __init__(self) :
         
@@ -464,6 +468,6 @@ class ProxyServer() :
 
 if __name__ == "__main__" :
     
-    main()
+    sys.exit(main())
 
 
