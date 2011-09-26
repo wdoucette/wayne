@@ -13,78 +13,79 @@ import sys
 import logging
 import threading
 
+
 def main() :
     
-    def __init__(self) :
-        """Initialize proxy server and configure program logging etc.
+    """Initialize proxy server and configure program logging etc.
 
     """
             
-        # Log has to be setup before doctest starts logging stuff.
-        self.initLog()
-        doctest.testmod()
-        
-        # Start the server.
-        ProxyServer() 
-   
-    def initLog(self):
+    # Log has to be setup before doctest starts logging stuff.
+    initLog()
+    doctest.testmod()
+    
+    # Start the server.
 
-        def usage() :
+    p=ProxyServer() 
 
-            print("""Usage:
-        -h --help : this menu
-        --verbosity= [ Info | Warn | Error | Debug ]
-        -d log level DEBUG
-        -l [filename] | --logfile=[filename]
-        """)
+def initLog():
+    
+    def usage() :
 
-        # Defaults
-        log_level = 'critical'
-        logfile_name = ""
+        print("""Usage:
+    -h --help : this menu
+    --verbosity= [ Info | Warn | Error | Debug ]
+    -d log level DEBUG
+    -l [filename] | --logfile=[filename]
+    """)
 
-        try :
-            opts, args = getopt.getopt(sys.argv[1:], '-h-d-l:v', ['help', 'verbosity=', 'logfile='])
+    # Defaults
+    log_level = 'critical'
+    logfile_name = ""
 
-        except getopt.GetoptError as err :
+    try :
+        opts, args = getopt.getopt(sys.argv[1:], '-h-d-l:v', ['help', 'verbosity=', 'logfile='])
 
-            logging.error(err)
+    except getopt.GetoptError as err :
+
+        logging.error(err)
+        usage()
+        exit(2)
+
+    for o, a in opts :
+
+        if o in ("-h", "--help"):
             usage()
-            exit(2)
+            exit(0)
 
-        for o, a in opts :
+        if o in ("-d", "--verbosity"):
 
-            if o in ("-h", "--help"):
-                usage()
-                exit(0)
-
-            if o in ("-d", "--verbosity"):
-
-                if o == '-d' : 
-                    a = 'DEBUG' # be verbose
-                
-                log_level = a.upper()
+            if o == '-d' : 
+                a = 'DEBUG' # be verbose
             
-            if o in ("-l", "--logfile") :
-                
-                # Set log level and log filename.
-                logfile_name = a
-                logfile_mode = 'w'
-
-        # Apply log options.
-        n_log_level= getattr(logging, log_level.upper(), None)
+            log_level = a.upper()
         
-        if not isinstance(n_log_level, int):
-                raise ValueError('Invalid log level: %s' % a)
+        if o in ("-l", "--logfile") :
+            
+            # Set log level and log filename.
+            logfile_name = a
+            logfile_mode = 'w'
 
-        if logfile_name == "" :
-            # Set log level only.
-            logging.basicConfig(level=n_log_level)
-            logging.info("Set log level %s" % log_level)
-       
-        else :
-            # Set log level and filename    
-            logging.basicConfig(filename=logfile_name, filemode=logfile_mode, level=n_log_level)
-            logging.info("Set log level to %s and log file to %s" % (log_level, logfile_name))
+    # Apply log options.
+    n_log_level= getattr(logging, log_level.upper(), None)
+    
+    if not isinstance(n_log_level, int):
+            raise ValueError('Invalid log level: %s' % a)
+
+    if logfile_name == "" :
+        # Set log level only.
+        logging.basicConfig(level=n_log_level)
+        logging.info("Set log level %s" % log_level)
+   
+    else :
+        # Set log level and filename    
+        logging.basicConfig(filename=logfile_name, filemode=logfile_mode, level=n_log_level)
+        logging.info("Set log level to %s and log file to %s" % (log_level, logfile_name))
 
 
     
@@ -252,103 +253,101 @@ class ProxyServices() :
         return dic
 
     @staticmethod
-    def parse_http_headers(buff) :
-            """ Extracts host, port, content length, content. 
+    
+    def parse_http_headers(buff):
+        """ Extracts host, port, content length, content.
+# GET request
+>>> buff = b"GET http://api.thetrafficstat.net/related?s=750&md=21&pid=473680971423164000&sess=773492173524573400&q=http%3A%2F%2Fdocs.python.org%2Flibrary%2Ffunctions.html&prev=http%3A%2F%2Fdocs.python.org%2Flibrary%2Fconstants.html&link=1&hreferer=http%3A%2F%2Fdocs.python.org%2Flibrary%2Fconstants.html HTTP/1.1\\r\\nHost: api.thetrafficstat.net\\r\\nProxy-Connection: keep-alive\\r\\nX-Requested-With: XMLHttpRequest\\r\\nUser-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/10.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30\\r\\nAccept: application/json, text/javascript, */*; q=0.01\\r\\nAccept-Encoding: gzip,deflate,sdch\\r\\nAccept-Language: en-US,en;q=0.8\\r\\nAccept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3\\r\\nCookie: pid2=70727a560d5f1081; ASP.NET_SessionId=aenf3u45qt5efk55rqipg345\\r\\n\\r\\n"
+>>> dic = ProxyServices.parse_http_headers(buff)
+>>> print(dic['host'])
+api.thetrafficstat.net
+>>> print(dic['action'])
+GET
+>>> print(dic['path'])
+/related?s=750&md=21&pid=473680971423164000&sess=773492173524573400&q=http%3A%2F%2Fdocs.python.org%2Flibrary%2Ffunctions.html&prev=http%3A%2F%2Fdocs.python.org%2Flibrary%2Fconstants.html&link=1&hreferer=http%3A%2F%2Fdocs.python.org%2Flibrary%2Fconstants.html
+
+# POST request - writes parsed header in raw binary format
+>>> buff = b"POST http://statcounter.com/project/ HTTP/1.1\\r\\nHost: statcounter.com\\r\\nProxy-Connection: keep-alive\\r\\nReferer: http://statcounter.com/\\r\\nContent-Length: 56\\r\\nCache-Control: max-age=0\\r\\nOrigin: http://statcounter.com\\r\\nUser-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/10.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30\\r\\nContent-Type: application/x-www-form-urlencoded\\r\\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\\r\\nAccept-Encoding: gzip,deflate,sdch\\r\\nAccept-Language: en-US,en;q=0.8\\r\\nAccept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3\\r\\nCookie: landing=http%3A//statcounter.com/|||; login=wdoucette%26cae836e112dda0dc72402dfdd638947f; is_unique_1=sc5473791.1316073483.2; is_unique=sc3566826.1316073489.2-1417324.1315759362.1-1417516.1315759348.0-204609.1316644289.5\\r\\n\\r\\nform_user=wdoucette&form_pass=123456&LOGIN_BUTTON=LOGIN"
+>>> buff = bytes(buff)
+>>> dic = None
+>>> dic = ProxyServices.parse_http_headers(buff)
+>>> print(dic['host'])
+statcounter.com
+>>> print(dic['action'])
+POST
+>>> print(dic['path'])
+/project/
+>>> f =open('/tmp/out', 'w+b')
+>>> f.write(dic['header'])
+830
+>>> f.close()
+>>> print(dic['header'].decode())
+POST http://statcounter.com/project/ HTTP/1.1\r\nHost: statcounter.com\r\nProxy-Connection: keep-alive\r\nReferer: http://statcounter.com/\r\nContent-Length: 56\r\nCache-Control: max-age=0\r\nOrigin: http://statcounter.com\r\nUser-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/10.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\nAccept-Encoding: gzip,deflate,sdch\r\nAccept-Language: en-US,en;q=0.8\r\nAccept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3\r\nCookie: landing=http%3A//statcounter.com/|||; login=wdoucette%26cae836e112dda0dc72402dfdd638947f; is_unique_1=sc5473791.1316073483.2; is_unique=sc3566826.1316073489.2-1417324.1315759362.1-1417516.1315759348.0-204609.1316644289.5
+>>> print(dic['body'])
+b'form_user=wdoucette&form_pass=123456&LOGIN_BUTTON=LOGIN'
 
 
-    # GET request
-    >>> buff = b"GET http://api.thetrafficstat.net/related?s=750&md=21&pid=473680971423164000&sess=773492173524573400&q=http%3A%2F%2Fdocs.python.org%2Flibrary%2Ffunctions.html&prev=http%3A%2F%2Fdocs.python.org%2Flibrary%2Fconstants.html&link=1&hreferer=http%3A%2F%2Fdocs.python.org%2Flibrary%2Fconstants.html HTTP/1.1\\r\\nHost: api.thetrafficstat.net\\r\\nProxy-Connection: keep-alive\\r\\nX-Requested-With: XMLHttpRequest\\r\\nUser-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/10.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30\\r\\nAccept: application/json, text/javascript, */*; q=0.01\\r\\nAccept-Encoding: gzip,deflate,sdch\\r\\nAccept-Language: en-US,en;q=0.8\\r\\nAccept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3\\r\\nCookie: pid2=70727a560d5f1081; ASP.NET_SessionId=aenf3u45qt5efk55rqipg345\\r\\n\\r\\n"
-    >>> dic = parse_http_headers(buff)
-    >>> print(dic['host'])
-    api.thetrafficstat.net
-    >>> print(dic['action'])
-    GET
-    >>> print(dic['path'])
-    /related?s=750&md=21&pid=473680971423164000&sess=773492173524573400&q=http%3A%2F%2Fdocs.python.org%2Flibrary%2Ffunctions.html&prev=http%3A%2F%2Fdocs.python.org%2Flibrary%2Fconstants.html&link=1&hreferer=http%3A%2F%2Fdocs.python.org%2Flibrary%2Fconstants.html
+# Mangled header: No address for hostname.
+#>>> s = ProxyServer() 
+#>>> dic = None
+#>>> buff = b'GET http://statcounter.comhttp//statcounter.com/project/?account_id=1748325&login_id=1&code=641e2527035d03cc200debd3b2fdb9db& HTTP/1.1\\r\\nzHost: statcounter.comhttp\\r\\nProxy-Connection: keep-alive\\r\\nReferer: http://statcounter.com/\\r\\nCache-Control: max-age=0\\r\\nUser-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/10.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30\\r\\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\\r\\nAccept-Encoding: gzip,deflate,sdch\\r\\nAccept-Language: en-US,en;q=0.8\\r\\nAccept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3\\r\\n\\r\\n'
+#>>> dic = ProxyServices.parse_http_headers(buff)
+#>>> content = get_page(dic['host'], dic['port'], buff)
+[Errno -5] No address associated with hostname
 
-    # POST request - writes parsed header in raw binary format
-    >>> buff = b"POST http://statcounter.com/project/ HTTP/1.1\\r\\nHost: statcounter.com\\r\\nProxy-Connection: keep-alive\\r\\nReferer: http://statcounter.com/\\r\\nContent-Length: 56\\r\\nCache-Control: max-age=0\\r\\nOrigin: http://statcounter.com\\r\\nUser-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/10.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30\\r\\nContent-Type: application/x-www-form-urlencoded\\r\\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\\r\\nAccept-Encoding: gzip,deflate,sdch\\r\\nAccept-Language: en-US,en;q=0.8\\r\\nAccept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3\\r\\nCookie: landing=http%3A//statcounter.com/|||; login=wdoucette%26cae836e112dda0dc72402dfdd638947f; is_unique_1=sc5473791.1316073483.2; is_unique=sc3566826.1316073489.2-1417324.1315759362.1-1417516.1315759348.0-204609.1316644289.5\\r\\n\\r\\nform_user=wdoucette&form_pass=123456&LOGIN_BUTTON=LOGIN"
+"""     
 
-    >>> buff = bytes(buff)
-    >>> dic = None
-    >>> dic = parse_http_headers(buff)
-    >>> print(dic['host'])
-    statcounter.com
-    >>> print(dic['action'])
-    POST
-    >>> print(dic['path'])
-    /project/
-    >>> f =open("/tmp/out" , "w+b")
-    >>> f.write(dic['header'])
-    830
-    >>> f.close()
-    >>> print(dic['header'].decode())
-    POST http://statcounter.com/project/ HTTP/1.1\r\nHost: statcounter.com\r\nProxy-Connection: keep-alive\r\nReferer: http://statcounter.com/\r\nContent-Length: 56\r\nCache-Control: max-age=0\r\nOrigin: http://statcounter.com\r\nUser-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/10.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\nAccept-Encoding: gzip,deflate,sdch\r\nAccept-Language: en-US,en;q=0.8\r\nAccept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3\r\nCookie: landing=http%3A//statcounter.com/|||; login=wdoucette%26cae836e112dda0dc72402dfdd638947f; is_unique_1=sc5473791.1316073483.2; is_unique=sc3566826.1316073489.2-1417324.1315759362.1-1417516.1315759348.0-204609.1316644289.5
-    >>> print(dic['body'])
-    b'form_user=wdoucette&form_pass=123456&LOGIN_BUTTON=LOGIN'
+        # TODO Separate request body from headers -e.g., PUT
+        #        logging.debug("content start: %i" %buff.find(r"\n\n")) 
 
-
-    # Mangled header: No address for hostname.
-    #>>> s = ProxyServer() 
-    #>>> dic = None
-    #>>> buff = b'GET http://statcounter.comhttp//statcounter.com/project/?account_id=1748325&login_id=1&code=641e2527035d03cc200debd3b2fdb9db& HTTP/1.1\\r\\nHost: statcounter.comhttp\\r\\nProxy-Connection: keep-alive\\r\\nReferer: http://statcounter.com/\\r\\nCache-Control: max-age=0\\r\\nUser-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/10.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30\\r\\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\\r\\nAccept-Encoding: gzip,deflate,sdch\\r\\nAccept-Language: en-US,en;q=0.8\\r\\nAccept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3\\r\\n\\r\\n'
-    #>>> dic = parse_http_headers(buff)
-    #>>> content = get_page(dic['host'], dic['port'], buff)
-    [Errno -5] No address associated with hostname
-
-    """     
-
-            # TODO Separate request body from headers -e.g., PUT
-    #        logging.debug("content start: %i" %buff.find(r"\n\n")) 
-
-            # Safe way to separate unknown content body encoding from known ascii header
-            # Can be used for processing response header also.
-            body = buff[buff.find(b'\r\n\r\n')+4:]
-            header = buff[:buff.find(b'\r\n\r\n')]
-            
-            #logging.debug("Request Header: %s" % header.decode())
-            #logging.debug("Request Body: %s" % body.decode())
-            
-            # Parse HTTP action.
-            p = re.compile('([A-Z]*)[ ](.*) HTTP(.*)')
-            
-            try :
-                 action = p.match(buff.decode()).group(1)
-           
-            except AttributeError as err :
-                
-                logging.critical("AttributeError in ACTION header regex. %s\n%s" % (err, buff) )
-
-            # Parse request header. 
-            try :
-
-                # Extract request header from raw HTTP headers.
-                raw_request_header = p.match(buff.decode()).group(2).strip()        
-            except AttributeError as err :
-                logging.critical("AttributeError in REQUEST header regex. %s\n%s" % (err, buff) )
-                exit(2)
-                
-            try :
-                # Enumerate HTTP Request
-                request = ProxyServices.enum_http_request(raw_request_header)
-
-            except RuntimeError as err :
-                logging.critical("RuntimeError: %s" % err)
-                exit(2) 
+        # Safe way to separate unknown content body encoding from known ascii header
+        # Can be used for processing response header also.
+        body = buff[buff.find(b'\r\n\r\n')+4:]
+        header = buff[:buff.find(b'\r\n\r\n')]
         
-            request['action'] = action
+        #logging.debug("Request Header: %s" % header.decode())
+        #logging.debug("Request Body: %s" % body.decode())
+        
+        # Parse HTTP action.
+        p = re.compile('([A-Z]*)[ ](.*) HTTP(.*)')
+        
+        try :
+             action = p.match(buff.decode()).group(1)
+       
+        except AttributeError as err :
             
-            # Rebuild request - first line in header.
-            regex = re.compile('[^\\n]*\\n(.*)', re.MULTILINE | re.DOTALL)
+            logging.critical("AttributeError in ACTION header regex. %s\n%s" % (err, buff) )
+
+        # Parse request header. 
+        try :
+
+            # Extract request header from raw HTTP headers.
+            raw_request_header = p.match(buff.decode()).group(2).strip()        
+        except AttributeError as err :
+            logging.critical("AttributeError in REQUEST header regex. %s\n%s" % (err, buff) )
+            exit(2)
             
-            proxy_headers = regex.search(buff.decode()).group(1)
-            proxy_headers = bytes(request['action'] +" " + request['path'] +" " + "HTTP/1.1\r\n" + proxy_headers,'ascii')
+        try :
+            # Enumerate HTTP Request
+            request = ProxyServices.enum_http_request(raw_request_header)
 
-            request['proxy_header'] = proxy_headers
-            request['body'] = body
-            request['header'] = header
+        except RuntimeError as err :
+            logging.critical("RuntimeError: %s" % err)
+            exit(2) 
+    
+        request['action'] = action
+        
+        # Rebuild request - first line in header.
+        regex = re.compile('[^\\n]*\\n(.*)', re.MULTILINE | re.DOTALL)
+        
+        proxy_headers = regex.search(buff.decode()).group(1)
+        proxy_headers = bytes(request['action'] +" " + request['path'] +" " + "HTTP/1.1\r\n" + proxy_headers,'ascii')
 
-            return request
+        request['proxy_header'] = proxy_headers
+        request['body'] = body
+        request['header'] = header
+
+        return request
 
 
 class ClientThread(threading.Thread) :
@@ -425,7 +424,10 @@ class ClientThread(threading.Thread) :
 
 
 class ProxyServer() :
+    
 
+    def __init__(self) :
+        
         # TODO paramaterize server HOST/PORT        
         # Establish proxy server on localhost:8081
         HOST = 'localhost' # None, '' ... Symbolic meaning all available interfaces
@@ -460,6 +462,7 @@ class ProxyServer() :
             continue
 
 if __name__ == "__main__" :
+    
     main()
 
 
