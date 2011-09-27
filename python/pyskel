@@ -1,28 +1,51 @@
 #!/usr/bin/env python3
 
-""" pyskel - Make a Python skeleton file.
-
+"""pyskel - Make a Python skeleton file.
+Usage:
+pyskel < filename >
 """
 
 import os
 import sys
+import getopt
+import stat
+import pycat
+
+class FuckYou(Exception) :
+
+    def __init__(self, msg) :
+        self.msg = msg
+        self.usage = """
+Try:
+-fucking yourself"""
 
 
-def usage() :
+class Usage(Exception) :
+
+    def __init__(self, msg) :
+        self.msg = msg
+        self.usage = """
+Try:
+pyskel <filename>"""
+
+def main(argv = None) :
+    """fuck me, you are a useless piece of dog shit."""  
+    if argv is None :
+        argv = sys.argv
     
-    print("""Create an empty Python file.
-Usage:
-my.py <filename.py>""")
-    exit(2)
+    try: 
+        try :
+            opts, args = getopt.getopt(argv[1:], "h", ["help"])
 
-def main() :
-    print('im here')
-    exit(2)
-if len(sys.argv) <2 : usage()
-
-filename =sys.argv[1]
-
-content = """#!/usr/bin/env python3
+        except getopt.error as msg:
+            raise Usage(msg)
+        for o, a in opts :
+            if o in ("-h", "--help") :
+                raise Usage("")
+                
+        #exit(0)
+        filename =sys.argv[1]
+        content = """#!/usr/bin/env python3
 
 import os
 import sys
@@ -41,35 +64,43 @@ def init() :
     Hello, World.
 
     \"\"\"
-    
+
 
     print("Hello, World.")
 
 
 doctest.testmod()
 
-""".format(filename)
+        """.format(filename)
 
 
+        # TODO make portable.
+        if os.path.isfile("./%s" %filename) :
 
-if os.path.isfile("./%s" %filename) :
-   
-    print("\nThe file exists, beotch!\n...")
-    os.system("head -n4 %s" %filename)
-    print("...")
+            print("The fucking FILE already exists, beotch!")
+            print("...")
+            pycat.pycat(filename, 4)
+            print("...")
+
+            if not input("\nProceed with overwriting file? ").upper() in ("Y", "YES", "YEP", "JA", "DA", "OUI", "OK", "SURE", "OO") :
+
+                raise FuckYou("Mission aborted, pussy.")
+
+        f = open("%s" %filename, "w")
+        f.write(content)
+        f.close()
+
+        os.chmod(filename, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR | stat.S_IROTH)
+        # TODO this is NOT portable.
+        pycat.pycat(filename)
+        #os.system("./%s -v | less" %filename) 
+        #os.system("vi ./%s" %filename)
     
-    if not input("\n...proceed to overwite file? ") in ("y", "yes", "yep") :
-    
-        print("Mission aborted.")
-        exit(2)
+    except Usage as err :
+            print("%s\n%s" %(err.msg, __doc__))
+            return 2
+    except (FuckYou, Exception) as fuck :
+        print("%s" %(fuck.msg))
+if __name__ == "__main__" :
 
-f = open("./%s" %filename, "w")
-f.write(content)
-f.close()
-
-
-os.system("chmod +x %s" %filename)
-os.system("./%s -v | less" %filename) 
-os.system("vi ./%s" %filename)
-
-
+    sys.exit(main())
