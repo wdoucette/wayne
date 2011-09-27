@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """pycat - write a file to stdout. Usage:
-pycat.py <filename> -n{} [n lines] -i [invert]
+pycat.py <filename> -n{} [n lines] -t[tail] -i[invert]
 """
 
 import io
@@ -15,16 +15,16 @@ class Usage(Exception) :
 
 def main(argv = None) :
     """main.__doc__ docstring"""
-    doctest.testmod()
-    nlines =0 
-    invert = False
-
+    #doctest.testmod()
+    invert, tail = False, False
+    nlines = None
+    
     try :
         if argv is None : 
             argv = sys.argv 
 
         try :
-            opts, args = getopt.getopt(sys.argv[1:], "-h-l:-i", ["help"])    
+            opts, args = getopt.getopt(sys.argv[1:], "-h-l:-t-i", ["help"])    
        
         except getopt.error as err :
         
@@ -36,6 +36,8 @@ def main(argv = None) :
                 print(__doc__)
                 exit(0)
             
+            if o in ("-t") :
+                tail = True
             if o in ("-i") :
                 invert = True
 
@@ -49,44 +51,52 @@ def main(argv = None) :
         except IndexError as err :
             raise Usage("No filename provided.")
 
-        pycat(filename, nlines, invert)
+        pycat(filename, nlines, tail, invert)
 
     except Usage as err:
         print("%s\n\n%s" %(err.msg, __doc__))
 
 
-def pycat(filename, nlines = 0, invert = False) :
+def pycat(filename, nlines = None, tail = False, invert = False) :
     """
 >>> pycat("pycat.py", 3)
 #!/usr/bin/env python3
 \"\"\"pycat - write a file to stdout. Usage:
-pycat.py <filename> -n{} [n lines] -i [invert]
+pycat.py <filename> -n{} [n lines] -t[tail] -i[invert]
 """
-    buff = ""
-
+    buff = []
+    lines = str()
+    
     try :
         if os.path.isfile(filename) is None :
-
+            
             raise Usage("File does not exist.")
 
         try :
 
             with io.open(filename, "r") as file :
-                if not nlines == 0:
-                    while nlines :
-                        line = file.readline()
-                        if invert : 
-                            buff = line + buff
-                        else :
-                            buff += line 
-                        nlines -= 1
 
-                    sys.stdout.write(buff)
+                buff = file.readlines()
+                
+                if nlines == None : 
+                    nlines = len(buff)
+                
+                if tail :
+                    start = len(buff) - nlines
+                    end = len(buff) 
                 else :
-                    buff = file.read()
-                    sys.stdout.write(buff)
-                    print()
-                return #buff
+                    start = 0
+                    end = nlines
+                
+                buff = buff[start:end]
+
+                if invert : buff.reverse()
+                
+                for line in buff : 
+                    print(line, end="") 
+                    #lines += line 
+                
+                    # print(lines, end="")
 
         except IOError as err :
 
