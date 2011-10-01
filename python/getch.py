@@ -18,7 +18,7 @@ class Usage(Exception) :
         self.msg = msg
 
 def main(argv = None) :
-    """Non-blocking non-buffered / blocking non-buffered read from stdin. 
+    """Blocking/non-blocking unbuffered character read from stdin. 
 Usage:
 >>> main()
 
@@ -27,16 +27,18 @@ Usage:
         argv = sys.argv
 
     __initOpts(argv)
-
+    
+    # Purge stdin.
     sys.stdin, data = _flush_fd(sys.stdin)
 
-    if data == None : print("stdin is a tty")
+    if data == None : 
+        pass#print("stdin is a tty")
     else:    
-        print("stdin data:\n%s" % data)
+        print(data)
    
     getch = _Getch()
     
-    print("Waiting for keypress.")
+    #print("Waiting for keypress.")
     ch = getch.__call__(True)
     print(ch)
 
@@ -53,7 +55,6 @@ def _flush_fd(fd) :
         stdoutdata, stderrdata = p.communicate()
         pty = bytes(stdoutdata).decode()[:-1]
 
-        #print("pty: %s" % pty)
         # Set stdin to console. 
         fd = open(pty,'r')
         return fd, string
@@ -62,7 +63,6 @@ def _flush_fd(fd) :
 
 class _Getch() :
  
-    
     def __init__(self):
 
         try :
@@ -74,8 +74,8 @@ class _Getch() :
    
         self._getch.blocking = blocking
     
-        
         return self._getch()
+
 
     class _GetchMS :
 
@@ -87,17 +87,17 @@ class _Getch() :
         
 
     class _GetchUnix :
-
+        
         def __init__(self) :
             self.blocking = False
-
+            
         def __call__(self) :
-
+            
             import termios
             import fcntl
             import sys  
-        
-            print('Blocking: %s' %self.blocking)
+
+            #print('Blocking: %s' %self.blocking)
             fd = sys.stdin.fileno() #os.fdopen(0, "r",1) #sys.stdin.fileno()
             try :
                 oldterm = termios.tcgetattr(fd)
@@ -109,7 +109,6 @@ class _Getch() :
                 fcntl.fcntl(fd, fcntl.F_SETFL, oldflags | os.O_NONBLOCK)
             except Exception as err:
                 print(err)
-                pass
             try:
                 while 1:
                     c = sys.stdin.read(1) #sys.stdin.read(0)
@@ -128,8 +127,8 @@ class _Getch() :
                 print(err)
             return c 
 
+
 class Getch() :   
-    # Non - buffering getch()
     
     def __init__(self):
     
