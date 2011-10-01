@@ -18,7 +18,7 @@ class Usage(Exception) :
         self.msg = msg
 
 def main(argv = None) :
-    """Non-blocking, non-buffering read from stdin. 
+    """Non-blocking non-buffered / blocking non-buffered read from stdin. 
 Usage:
 >>> main()
 
@@ -28,21 +28,22 @@ Usage:
 
     __initOpts(argv)
 
-    sys.stdin, data = flush_fd(sys.stdin)
+    sys.stdin, data = _flush_fd(sys.stdin)
 
     if data == None : print("stdin is a tty")
     else:    
         print("stdin data:\n%s" % data)
-    
-    # Non - buffering getch()
-    getch = __Getch()
+   
+    getch = _Getch()
     
     print("Waiting for keypress.")
     for i in range(1):
-        ch = getch.__call__()
+        ch = getch.__call__(True)
         print("char #%i: %s" %(i,ch))
+    return ch
 
-def flush_fd(fd) :
+
+def _flush_fd(fd) :
     """ If fd is a pipe, buffers data, then restores fd to tty and 
     returns buffer."""
     if not fd.isatty() :
@@ -55,14 +56,14 @@ def flush_fd(fd) :
         stdoutdata, stderrdata = p.communicate()
         pty = bytes(stdoutdata).decode()[:-1]
 
-        print("pty: %s" % pty)
+        #print("pty: %s" % pty)
         # Set stdin to console. 
         fd = open(pty,'r')
         return fd, string
     else : 
         return fd, None
 
-class __Getch() :
+class _Getch() :
  
     
     def __init__(self):
@@ -72,8 +73,11 @@ class __Getch() :
         except ImportError :
             self._getch = self._GetchUnix()
 
-    def __call__(self):
-       
+    def __call__(self, blocking = False):
+        self._getch.blocking = blocking
+        print("_Getch blocking: %s" %blocking)
+    
+        
         return self._getch()
 
     class _GetchMS :
@@ -86,15 +90,20 @@ class __Getch() :
         
 
     class _GetchUnix :
-        
+       
+
         def __init__(self) :
+            self.blocking = False
             #pass#import termios, sys,io,os, tty
             pass
 
         def __call__(self) :
 
-            import termios, fcntl, sys  
-
+            import termios
+            import fcntl
+            import sys  
+        
+            print('Blocking: %s' %self.blocking)
             fd = sys.stdin.fileno() #os.fdopen(0, "r",1) #sys.stdin.fileno()
             try :
                 oldterm = termios.tcgetattr(fd)
@@ -109,21 +118,28 @@ class __Getch() :
                 pass
             try:
                 while 1:
-                    c = sys.stdin.read(1)
+                    c = sys.stdin.read(1) #sys.stdin.read(0)
                     if c : 
-                        break
+                        break  
+                    if self.blocking == False: 
+                        break 
                         #if ord(c) == 10 :
-                            #sys.stdin.flush()
-                            #print("stat: %s:" % repr(os.fstat(0)))
             except IOError as err: 
                 print(err)
                 pass
             try : 
                 termios.tcsetattr(fd, termios.TCSAFLUSH, oldterm)
                 fcntl.fcntl(fd, fcntl.F_SETFL, oldflags)
-            except : 
-                pass
+            except Exception as err: 
+                print(err)
             return c 
+
+class Getch() :   
+    # Non - buffering getch()
+    
+    def __init__(self):
+    
+        self.getch = _Getch().__call__
 
 
 def __initOpts(argv) :
@@ -146,11 +162,11 @@ def __initOpts(argv) :
         exit(0)
  
 
-
-
 if __name__ == "__main__" :
    
     #doctest.testmod()
     sys.exit(main())
 
-
+else :
+    getch = Getch().getch
+    flush_fd = _flush_fd
