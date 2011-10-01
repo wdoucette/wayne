@@ -1,111 +1,30 @@
 #!/usr/bin/env python3
-"""pycat - write a file to stdout. Usage:
-pycat.py <filename> -n{} [n lines] -t[tail] -i[invert]
-"""
-
 import io
 import sys
-import os
-import getopt
-import doctest
 
-class Usage(Exception) :
-    def __init__(self, msg) :
-        self.msg = msg
+"""pycat writes a file's content to stdout. Usage: pycat.py filename"""
 
 def main(argv = None) :
-    """main.__doc__ docstring"""
-    #doctest.testmod()
-    invert, tail = False, False
-    nlines = None
-    
-    try :
-        if argv is None : 
-            argv = sys.argv 
-
-        try :
-            opts, args = getopt.getopt(sys.argv[1:], "-h-l:-t-i", ["help"])    
        
-        except getopt.error as err :
-        
-            raise Usage(err)
+    if argv == None:
+        argv = sys.argv
+    if len(sys.argv) < 2 :
+        exit(2)
+        raise SystemExit("No filename provided. Try: pycat.py filename")
 
-        for o, a in opts :
-
-            if o in ("-h", "--help"):
-                print(__doc__)
-                exit(0)
-            
-            if o in ("-t") :
-                tail = True
-            if o in ("-i") :
-                invert = True
-
-            elif o in ("-l"):
-                nlines = int(a)
-                #exit(0)
-
-        try : 
-            filename=args[0]
-        
-        except IndexError as err :
-            raise Usage("No filename provided.")
-
-        pycat(filename, nlines, tail, invert)
-
-    except Usage as err:
-        print("%s\n\n%s" %(err.msg, __doc__))
-
-
-def pycat(filename, nlines = None, tail = False, invert = False) :
-    """
->>> pycat("pycat.py", 3)
-#!/usr/bin/env python3
-\"\"\"pycat - write a file to stdout. Usage:
-pycat.py <filename> -n{} [n lines] -t[tail] -i[invert]
-"""
-    buff = []
-    lines = str()
-    
     try :
-        if os.path.isfile(filename) is None :
+        
+        with io.open(sys.argv[1], "r") as file :
+
+            buff = file.read()
+            sys.stdout.write(buff)
+            exit(0)
             
-            raise Usage("File does not exist.")
+    except IOError as err :
+        
+        sys.exit("IO Error({0})".format(err))
 
-        try :
-
-            with io.open(filename, "r") as file :
-
-                buff = file.readlines()
-                
-                if nlines == None : 
-                    nlines = len(buff)
-                
-                if tail :
-                    start = len(buff) - nlines
-                    end = len(buff) 
-                else :
-                    start = 0
-                    end = nlines
-                
-                buff = buff[start:end]
-
-                if invert : buff.reverse()
-                
-                for line in buff : 
-                    print(line, end="") 
-                    #lines += line 
-                
-                    # print(lines, end="")
-
-        except IOError as err :
-
-            print("IO Error({0})".format(err), file=sys.stderr)
-            raise Usage(err)
-
-    except Usage as err:
-        print(err)
-        return 2
 
 if __name__ == "__main__" :
     sys.exit(main())
+
