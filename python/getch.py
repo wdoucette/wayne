@@ -37,11 +37,8 @@ Usage:
     getch = _Getch()
     
     print("Waiting for keypress.")
-    for i in range(1):
-        ch = getch.__call__(True)
-        print("char #%i: %s" %(i,ch))
-    return ch
-
+    ch = getch.__call__(True)
+    print(ch)
 
 def _flush_fd(fd) :
     """ If fd is a pipe, buffers data, then restores fd to tty and 
@@ -73,9 +70,9 @@ class _Getch() :
         except ImportError :
             self._getch = self._GetchUnix()
 
-    def __call__(self, blocking = False):
+    def __call__(self, blocking):
+   
         self._getch.blocking = blocking
-        print("_Getch blocking: %s" %blocking)
     
         
         return self._getch()
@@ -90,12 +87,9 @@ class _Getch() :
         
 
     class _GetchUnix :
-       
 
         def __init__(self) :
             self.blocking = False
-            #pass#import termios, sys,io,os, tty
-            pass
 
         def __call__(self) :
 
