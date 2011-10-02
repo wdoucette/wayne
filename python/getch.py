@@ -45,12 +45,18 @@ Usage:
 def _flush_fd(fd) :
     """ If fd is a pipe, buffers data, then restores fd to tty and 
     returns buffer."""
-    if not fd.isatty() :
-        string = ""
-        for lines in fd:
-            string += lines
 
-        # Find shell tty 
+    string = ""    
+    try :
+        if not fd.isatty() :
+            for lines in fd:
+                string += lines 
+    except AttributeError as err :
+        # Windows cmd bug
+        print("try foo | python %s" %sys.argv[0])
+        exit(2)
+        
+    try : # Linux - find shell tty. 
         p = subprocess.Popen(['tty'], stdin=sys.stderr, stdout=subprocess.PIPE)
         stdoutdata, stderrdata = p.communicate()
         pty = bytes(stdoutdata).decode()[:-1]
@@ -58,9 +64,9 @@ def _flush_fd(fd) :
         # Set stdin to console. 
         fd = open(pty,'r')
         return fd, string
-    else : 
-        return fd, None
-
+    except WindowsError as err: 
+        return fd, string 
+        
 class _Getch() :
  
     def __init__(self):
@@ -80,12 +86,19 @@ class _Getch() :
     class _GetchMS :
 
         def __init__(self):
+            self.blocking = False
             import msvcrt
         def __call__(self):
             import msvcrt
-            return msvrt.getch()
+            ch = ""            
+            if not self.blocking:
+                #Return true if a keypress is waiting to be read.
+                if msvcrt.kbhit():
+                    ch = msvcrt.getch().decode()            
+            else : ch = msvcrt.getch().decode()
+            return ch
         
-
+                
     class _GetchUnix :
         
         def __init__(self) :
@@ -119,7 +132,6 @@ class _Getch() :
                         #if ord(c) == 10 :
             except IOError as err: 
                 print(err)
-                pass
             try : 
                 termios.tcsetattr(fd, termios.TCSAFLUSH, oldterm)
                 fcntl.fcntl(fd, fcntl.F_SETFL, oldflags)

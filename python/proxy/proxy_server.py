@@ -188,6 +188,8 @@ class ProxyServices() :
         s.close()
         return 0	
 
+
+###########################
     @staticmethod 
     def enum_http_request(raw_request_header) :
 
@@ -207,18 +209,15 @@ class ProxyServices() :
         RuntimeError: Direct requests not allowed. Requested path was: direct/request/relative/path
         
     """
-
-       
         Services = ProxyServices.enum(HTTPS='443', HTTP='80', FTP='21', IMAP='445', SSH='22')
 
-      
         dic = {}
 
         if raw_request_header.find('/') == 0 :
 
             # Get request is relative to host/ , -not a proxied request.
-            # TODO this will be OK in future transparent mode
-            raise RuntimeError('Direct requests not allowed. Requested path was: %s' % request[1:])
+            dic['mode'] = "Transparent"
+           # raise RuntimeError('Tirect requests not allowed. Requested path was: %s' % raw_request_header[1:])
 
         proto = raw_request_header[:raw_request_header.find('://')]
 
@@ -251,6 +250,9 @@ class ProxyServices() :
         dic['proto'] = proto
 
         return dic
+
+
+#############################################
 
     @staticmethod
     
@@ -327,6 +329,13 @@ b'form_user=wdoucette&form_pass=123456&LOGIN_BUTTON=LOGIN'
         try :
             # Enumerate HTTP Request
             request = ProxyServices.enum_http_request(raw_request_header)
+            # Uber hack
+            try : 
+                if request['shunt'] : 
+                    return request
+            except Exception :
+                pass
+
 
         except RuntimeError as err :
             logging.critical("RuntimeError: %s" % err)
@@ -341,8 +350,12 @@ b'form_user=wdoucette&form_pass=123456&LOGIN_BUTTON=LOGIN'
 
         # Rebuild request - first line in header.
         regex = re.compile('[^\\n]*\\n(.*)', re.MULTILINE | re.DOTALL)
-        
-        proxy_headers = regex.search(buff.decode()).group(1)
+        #TODO sometimes grabbing non utf-8 chars here:  
+        try :
+            proxy_headers = regex.search(buff.decode()).group(1)
+        except Exception as err:
+            print(err)
+            print(buff)
         proxy_headers = bytes(request['action'] +" " + request['path'] +" " + "HTTP/1.1\r\n" + proxy_headers,'ascii')
 
         request['proxy_header'] = proxy_headers
@@ -350,6 +363,9 @@ b'form_user=wdoucette&form_pass=123456&LOGIN_BUTTON=LOGIN'
         request['header'] = header
 
         return request
+
+
+
 
 
 class ClientThread(threading.Thread) :
@@ -404,7 +420,7 @@ class ClientThread(threading.Thread) :
             self.clientsocket.close()
             ClientThread.__count -= 1
             return
-       
+
         logging.debug("Finished receiving client request %s bytes\n%s" %( len(buff), buff))
 
         # We can't arbitarily apply a codec here. Only header can be assumed ascii
@@ -412,6 +428,24 @@ class ClientThread(threading.Thread) :
         
         dic = ProxyServices.parse_http_headers(buff)
         
+        # TODO Uber-hack
+        try : 
+            if dic['transparent'] :
+                content=b"""HTTP/1.1 200 OK
+Content-type: text/html
+
+<html><body>Direct requests are not allowed at this time. 
+<br />This message brought to you by the Python HTTP proxy server.</body></html>"""
+        
+                #f=open("/tmp/head","bw")
+                #f.write(content)
+                
+                self.clientsocket.sendall((content))
+                self.clientsocket.close()
+                
+                return 0
+        except Exception :
+            pass
          
         ProxyServices.fetch(dic['host'], dic['port'], dic['proxy_header'], self.clientsocket)
         
@@ -427,6 +461,10 @@ class ClientThread(threading.Thread) :
         logging.debug("ClientThread.count: %i" %ClientThread.__count)
 
         return
+
+
+
+
 
 
 class ProxyServer() :
@@ -447,7 +485,7 @@ class ProxyServer() :
         #TODO config file
 
         #open in binary write mode, no need to cast byte(ascii)
-        f =open("/tmp/get","w+b")
+        #f =open("/tmp/get","w+b")
         
         while True :
         

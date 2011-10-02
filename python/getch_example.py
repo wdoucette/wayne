@@ -7,11 +7,12 @@ def main() :
     
     # Empty stdin
     sys.stdin, data = getch.flush_fd(sys.stdin)
-    if data: print(data)
+    if data:
+        print(data)
     
     # Get next key press
     ch = getch.getch(True)
-    print('got %s' %ch)
+    print(ch)
 
 
 if __name__ == "__main__" :
