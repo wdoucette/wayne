@@ -56,8 +56,8 @@ cp /tmp/gitignore ./.gitignore
 # Recurses SEARCHPATH to produce tree of files to be tested.
 # TODO try this: 
 #find . -regex ????? -type f -exec file '{}' \;
-find $SEARCHPATH -type f -name "*" | grep -v $EXCLUDE_DIRS > /tmp/$APP_NAME.searchtree
-
+#find $SEARCHPATH -type f -name "*" | grep -v $EXCLUDE_DIRS > /tmp/$APP_NAME.searchtree
+git ls-files -o --exclude-standard | grep -v $EXCLUDE_DIRS > /tmp/$APP_NAME.searchtree
 
 
 #------Match MIME types.
