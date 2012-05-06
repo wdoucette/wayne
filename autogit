@@ -19,6 +19,8 @@
 
 MIME_TYPES="application/x-exe" 			# binary executables
 MIME_TYPES+="\|application/octet-stream" 	# databases, etc.
+MIME_TYPES+="\|application/x-sharedlib"
+MIME_TYPES+="\|application/x-archive"
 #MIME_TYPES+="\|application/xml"
 #MIME_TYPES+="\|text/x-perl"
 #MIME_TYPES+="\|text/plain"
